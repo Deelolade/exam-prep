@@ -1,20 +1,16 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/client'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import Link from 'next/link'
+
+const FIELD_CLASSES =
+  'h-11 rounded-lg border-slate-200 bg-white px-3.5 text-[14px] focus-visible:border-primary focus-visible:ring-primary/30'
 
 export function ForgotPasswordForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
   const [email, setEmail] = useState('')
@@ -43,56 +39,59 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
   }
 
   return (
-    <div className={cn('flex flex-col gap-6', className)} {...props}>
+    <div className={cn('flex flex-col', className)} {...props}>
       {success ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Check Your Email</CardTitle>
-            <CardDescription>Password reset instructions sent</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              If you registered using your email and password, you will receive a password reset
-              email.
-            </p>
-          </CardContent>
-        </Card>
+        <>
+          <h2 className="font-sans text-2xl font-semibold tracking-tight text-dark">Check your email</h2>
+          <p className="text-sm leading-relaxed text-slate-500 mt-1.5 mb-8">
+            If you registered using your email and password, you will receive a password reset email
+            with instructions.
+          </p>
+          <Link
+            href="/auth/login"
+            className="inline-flex items-center justify-center w-full h-11 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-dark hover:bg-slate-50 transition"
+          >
+            Back to sign in
+          </Link>
+        </>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Reset Your Password</CardTitle>
-            <CardDescription>
-              Type in your email and we&apos;ll send you a link to reset your password
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleForgotPassword}>
-              <div className="flex flex-col gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Sending...' : 'Send reset email'}
-                </Button>
-              </div>
-              <div className="mt-4 text-center text-sm">
-                Already have an account?{' '}
-                <Link href="/auth/login" className="underline underline-offset-4">
-                  Login
-                </Link>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <>
+          <h2 className="font-sans text-2xl font-semibold tracking-tight text-dark">Reset your password</h2>
+          <p className="text-sm text-slate-500 mt-1.5 mb-8">
+            Type in your email and we&apos;ll send you a link to reset your password.
+          </p>
+
+          <form onSubmit={handleForgotPassword} className="flex flex-col gap-5">
+            <div className="grid gap-2">
+              <Label htmlFor="email" className="text-[13px] font-medium text-dark">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={FIELD_CLASSES}
+              />
+            </div>
+
+            {error && <p className="text-[13px] text-red-500">{error}</p>}
+
+            <Button type="submit" className="w-full h-11 rounded-lg text-sm font-semibold" disabled={isLoading}>
+              {isLoading ? 'Sending...' : 'Send reset email'}
+            </Button>
+          </form>
+
+          <p className="text-center text-[13.5px] text-slate-500 mt-7">
+            Remembered it?{' '}
+            <Link href="/auth/login" className="font-semibold text-primary hover:underline underline-offset-4">
+              Back to sign in
+            </Link>
+          </p>
+        </>
       )}
     </div>
   )

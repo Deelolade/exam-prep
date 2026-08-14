@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FiArrowRight } from "react-icons/fi";
 import { SECTIONS, QUESTIONS } from "@/data/questions";
 
@@ -7,7 +8,13 @@ type LandingProps = {
 
 export default function Landing({ onStart }: LandingProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center px-5 py-8">
+    <div className="min-h-screen flex items-center justify-center px-5 py-8 relative">
+      <Link
+        href="/auth/login"
+        className="absolute top-5 right-5 inline-flex items-center gap-2 border border-slate-300 bg-white text-dark px-4 py-2 rounded-lg text-[13px] font-semibold hover:border-primary hover:text-primary transition"
+      >
+        Sign in
+      </Link>
       <div className="max-w-190 w-full">
         <p className="font-mono text-xs tracking-[0.14em] uppercase text-primary mb-3.5">
           CBT Screening Exam · Simulator
