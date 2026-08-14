@@ -84,7 +84,7 @@ export default function SplitShell({ children }: { children: React.ReactNode }) 
           {/* brand */}
           <div className="mb-10">
             <span className="font-sans text-[20px] font-semibold tracking-tight text-dark">
-              ExamPrep<span className="text-primary">.run</span>
+              ExamPrep<span className="text-[#B98C3E]">.run</span>
             </span>
           </div>
 

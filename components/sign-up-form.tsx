@@ -142,7 +142,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
 
         {error && <p className="text-[13px] text-red-500">{error}</p>}
 
-        <Button type="submit" className="w-full h-11 rounded-lg text-sm font-semibold" disabled={isLoading}>
+        <Button type="submit" className="w-full h-11 rounded-lg text-sm font-semibold text-[#182032] bg-[#D6A84F] hover:bg-[#B98C3E]" disabled={isLoading}>
           {isLoading ? 'Creating account...' : 'Create account'}
         </Button>
       </form>
@@ -166,7 +166,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
 
       <p className="text-center text-[13.5px] text-slate-500 mt-7">
         Already have an account?{' '}
-        <Link href="/auth/login" className="font-semibold text-primary hover:underline underline-offset-4">
+        <Link href="/auth/login" className="font-semibold hover:text-[#B98C3E] hover:underline underline-offset-4">
           Sign in
         </Link>
       </p>

@@ -90,7 +90,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
             </Label>
             <Link
               href="/auth/forgot-password"
-              className="text-[12.5px] font-medium text-primary hover:underline underline-offset-4"
+              className="text-[12.5px] font-medium  hover:text-[#B98C3E] hover:underline underline-offset-4"
             >
               Forgot password?
             </Link>
@@ -123,7 +123,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
         {error && <p className="text-[13px] text-red-500">{error}</p>}
 
-        <Button type="submit" className="w-full h-11 rounded-lg text-sm font-semibold" disabled={isLoading}>
+        <Button type="submit" className="w-full h-11 rounded-lg text-sm font-semibold  text-[#182032]  bg-[#D6A84F] hover:bg-[#B98C3E]" disabled={isLoading}>
           {isLoading ? 'Signing in...' : 'Sign in'}
         </Button>
       </form>
@@ -147,7 +147,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
       <p className="text-center text-[13.5px] text-slate-500 mt-7">
         Don&apos;t have an account?{' '}
-        <Link href="/auth/sign-up" className="font-semibold text-primary hover:underline underline-offset-4">
+        <Link href="/auth/sign-up" className="font-semibold hover:text-[#B98C3E]  hover:underline underline-offset-4">
           Create account
         </Link>
       </p>
