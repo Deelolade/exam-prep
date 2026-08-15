@@ -27,47 +27,44 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   const router = useRouter()
 
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const supabase = createClient()
-    setIsLoading(true)
-    setError(null)
+    e.preventDefault();
+
+    const supabase = createClient();
+
+    setIsLoading(true);
+    setError(null);
 
     if (password !== repeatPassword) {
-      setError('Passwords do not match')
-      setIsLoading(false)
-      return
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
     }
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/confirm?next=/protected`,
         },
-      })
-      console.log(data)
-      if (error) throw error
-      // Best-effort welcome email — never block signup on delivery.
-      // With email confirmation enabled, `data.user` is null here; send the
-      // welcome email from a webhook/edge function after confirmation instead.
-      if (data.user) {
-        fetch('/api/emails/welcome', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        }).catch(() => {})
+      });
+
+      if (error) {
+        throw error;
       }
-      router.push('/auth/sign-up-success');
-      toast.success('Sign up successful')
+
+      toast.success("Check your email to verify your account");
+      router.push("/auth/sign-up-success");
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'An error occurred')
-      setError(error instanceof Error ? error.message : 'An error occurred')
+      const message =
+        error instanceof Error ? error.message : "An error occurred";
+
+      setError(message);
+      toast.error(message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
-
   const handleGoogleSignUp = async () => {
     const supabase = createClient()
     setIsGoogleLoading(true)
@@ -76,6 +73,8 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
       const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' })
       if (error) throw error
       // On success Supabase redirects to the OAuth provider; nothing to do here.
+      toast.success('Google sign-in successful')
+      router.push('/protected')
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Google sign-in failed')
     } finally {
