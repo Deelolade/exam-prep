@@ -41,11 +41,11 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/confirm?next=/protected`,
+          emailRedirectTo: `${window.location.origin}/auth/confirm?next=/dashboard`,
         },
       });
 
@@ -53,8 +53,26 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
         throw error;
       }
 
-      toast.success("Check your email to verify your account");
-      router.push("/auth/sign-up-success");
+      // Best-effort welcome email — never blocks signup. With email
+      // confirmation enabled, `data.user` is null here; send it from a
+      // post-confirmation webhook instead in that case.
+      if (data.user) {
+        fetch('/api/emails/welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        }).catch(() => {});
+      }
+
+      if (data.session) {
+        // Email confirmation is disabled — the user is signed in immediately.
+        toast.success('Account created — welcome to ExamPrep.run');
+        router.push('/dashboard');
+      } else {
+        // Email confirmation is enabled — verify before reaching the dashboard.
+        toast.success('Check your email to verify your account');
+        router.push('/auth/sign-up-success');
+      }
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "An error occurred";
@@ -72,9 +90,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
     try {
       const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' })
       if (error) throw error
-      // On success Supabase redirects to the OAuth provider; nothing to do here.
-      toast.success('Google sign-in successful')
-      router.push('/protected')
+      // Supabase redirects to the OAuth provider; the callback routes back to /dashboard.
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Google sign-in failed')
     } finally {

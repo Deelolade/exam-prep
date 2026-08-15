@@ -6,7 +6,7 @@ export async function GET(request: Request) {
 
   const code = searchParams.get("code")
   const nextParam = searchParams.get("next")
-  const next = nextParam?.startsWith("/") ? nextParam : "/protected"
+  const next = nextParam?.startsWith("/") ? nextParam : "/dashboard"
 
   if (code) {
     const supabase = await createClient()

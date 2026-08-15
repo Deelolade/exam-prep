@@ -8,7 +8,7 @@ type EmailProps = {
 };
 
 export const sendEmail = async ({ to, subject, html }: EmailProps) => {
-  const { data, error } = await resend().emails.send({
+  const { data, error } = await resend.emails.send({
     to,
     from: EMAIL_FROM,
     subject,
