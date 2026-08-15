@@ -39,16 +39,29 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/protected`,
+          emailRedirectTo: `${window.location.origin}/auth/confirm?next=/protected`,
         },
       })
+      console.log(data)
       if (error) throw error
-      router.push('/auth/sign-up-success')
+      // Best-effort welcome email — never block signup on delivery.
+      // With email confirmation enabled, `data.user` is null here; send the
+      // welcome email from a webhook/edge function after confirmation instead.
+      if (data.user) {
+        fetch('/api/emails/welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        }).catch(() => {})
+      }
+      router.push('/auth/sign-up-success');
+      toast.success('Sign up successful')
     } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'An error occurred')
       setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {
       setIsLoading(false)
