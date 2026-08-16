@@ -88,7 +88,7 @@ export default async function DashboardPage() {
               explanations.
             </p>
             <Link
-              href="/"
+              href="/dashboard/exams"
               className="mt-4 inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg h-11 px-5 text-sm font-semibold hover:bg-primary-hover transition"
             >
               Start practicing
