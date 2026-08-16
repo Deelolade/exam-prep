@@ -13,7 +13,8 @@ import {
 } from "react-email";
 
 const NAVY = "#0F172A";
-const BLUE = "#2563EB";
+const GOLD = "#D6A84F";
+const ON_GOLD = "#182032";
 const MUTED = "#64748B";
 const BORDER = "#E2E8F0";
 const BG = "#F8FAFC";
@@ -51,7 +52,7 @@ export default function WelcomeEmail({ appUrl = "http://localhost:3000" }: Welco
           }}
         >
           <Text style={{ fontSize: "18px", fontWeight: 700, color: NAVY, margin: "0 0 28px", letterSpacing: "-0.02em" }}>
-            ExamPrep<span style={{ color: BLUE }}>.run</span>
+            ExamPrep<span style={{ color: GOLD }}>.run</span>
           </Text>
 
           <Heading style={{ fontSize: "24px", fontWeight: 700, color: NAVY, margin: "0 0 12px", letterSpacing: "-0.01em" }}>
@@ -67,8 +68,8 @@ export default function WelcomeEmail({ appUrl = "http://localhost:3000" }: Welco
             <Button
               href={`${appUrl}/`}
               style={{
-                backgroundColor: BLUE,
-                color: "#ffffff",
+                backgroundColor: GOLD,
+                color: ON_GOLD,
                 padding: "12px 24px",
                 borderRadius: "8px",
                 fontSize: "15px",

@@ -53,7 +53,7 @@ export default function Landing({ onStart }: LandingProps) {
         <div className="flex items-center gap-4 flex-wrap">
           <button
             onClick={onStart}
-            className="inline-flex items-center gap-2 bg-primary text-white px-7 py-3.5 rounded-lg text-[15px] font-bold tracking-wide cursor-pointer transition duration-150 hover:bg-blue-600 hover:-translate-y-px active:translate-y-0 shadow-sm shadow-primary/30"
+            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-7 py-3.5 rounded-lg text-[15px] font-bold tracking-wide cursor-pointer transition duration-150 hover:bg-primary-hover hover:-translate-y-px active:translate-y-0 shadow-sm shadow-primary/30"
           >
             Start exam
             <FiArrowRight className="w-4 h-4" />

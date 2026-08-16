@@ -89,7 +89,7 @@ export default async function DashboardPage() {
             </p>
             <Link
               href="/"
-              className="mt-4 inline-flex items-center justify-center gap-2 bg-primary text-white rounded-lg h-11 px-5 text-sm font-semibold hover:bg-blue-600 transition"
+              className="mt-4 inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg h-11 px-5 text-sm font-semibold hover:bg-primary-hover transition"
             >
               Start practicing
               <FiArrowRight className="w-4 h-4" aria-hidden="true" />

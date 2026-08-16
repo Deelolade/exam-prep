@@ -117,7 +117,7 @@ export default function ExamView({
               </button>
               <button
                 onClick={onSubmit}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold cursor-pointer bg-primary text-white hover:bg-blue-600 transition shadow-sm shadow-primary/30"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold cursor-pointer bg-primary text-primary-foreground hover:bg-primary-hover transition shadow-sm shadow-primary/30"
               >
                 Submit exam
               </button>
