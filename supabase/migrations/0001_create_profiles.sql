@@ -37,6 +37,10 @@ begin
   on conflict (id) do nothing;
 
   return new;
+exception
+  when others then
+    -- Prevent trigger errors from failing the auth user creation
+    return new;
 end;
 $$;
 
