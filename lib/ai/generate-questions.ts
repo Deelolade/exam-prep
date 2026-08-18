@@ -1,5 +1,5 @@
 import type { Question } from "@/data/questions";
-import { getOpenAIKey, getAiBaseUrl, getAiModel } from "@/utils/env";
+import { getAIAPIKey, getAiBaseUrl, getAiModel } from "@/utils/env";
 
 export type GenerateQuestionsInput = {
   subjectCode: string;
@@ -25,8 +25,11 @@ function isNonEmptyString(value: unknown): value is string {
  * Validates one AI-generated question. Returns the Question fields (without
  * `section`, which is derived from the subject) or null if malformed.
  */
-export function validateQuestion(raw: RawQuestion): Omit<Question, "section"> | null {
-  if (!raw || !isNonEmptyString(raw.q) || !isNonEmptyString(raw.hint)) return null;
+export function validateQuestion(
+  raw: RawQuestion,
+): Omit<Question, "section"> | null {
+  if (!raw || !isNonEmptyString(raw.q) || !isNonEmptyString(raw.hint))
+    return null;
 
   if (!Array.isArray(raw.options) || raw.options.length !== 4) return null;
 
@@ -49,29 +52,109 @@ export function validateQuestion(raw: RawQuestion): Omit<Question, "section"> | 
 
 /**
  * Generates CBT questions via an OpenAI-compatible chat completions API.
- * Configure with OPENAI_API_KEY; optionally override the endpoint/model with
+ * Configure with AI_API_KEY; optionally override the endpoint/model with
  * AI_BASE_URL and AI_MODEL (works with OpenAI, DeepSeek, Groq, OpenRouter,
  * local proxies, etc.).
  */
 export async function generateQuestions(
   input: GenerateQuestionsInput,
 ): Promise<Question[]> {
-  const apiKey = getOpenAIKey();
+  const apiKey = getAIAPIKey();
   const baseUrl = getAiBaseUrl();
   const model = getAiModel();
 
-  const system = [
-    "You write CBT (computer-based test) practice questions for Nigerian exams.",
-    `Exam type: ${input.examType ?? "general"}. Subject: ${input.subjectName}.`,
-    'Respond with ONLY a JSON object: {"questions": [ ... ]}.',
-    "Each question object has exactly these fields:",
-    '- "q": the question text',
-    '- "hint": a short hint',
-    '- "passage": an optional reading passage (omit for most questions)',
-    '- "options": exactly 4 objects, each with "t" (option text), "c" (boolean — true only for the single correct option) and "r" (one-sentence explanation)',
-    "Exactly one option per question must have c: true.",
-    `Generate ${input.count} questions${input.difficulty ? ` with ${input.difficulty} difficulty` : ""}.`,
-  ].join("\n");
+  const system = `
+  You are an expert CBT examination question writer specializing in
+  Nigerian secondary-school, university screening, PostUTME, JAMB,
+  WAEC, NECO, and ND-level examinations.
+
+  Your task is to generate high-quality multiple-choice questions
+  for the specified exam, subject, topic, and difficulty.
+
+  EXAM:
+  ${input.examType ?? "General Nigerian examination"}
+
+  SUBJECT:
+  ${input.subjectName}
+
+  DIFFICULTY:
+  ${input.difficulty ?? "mixed"}
+
+  STRICT REQUIREMENTS:
+
+  1. Generate exactly ${input.count} questions.
+
+  2. Every question must test a meaningful concept from the specified
+     subject. Do not create vague, trivial, or filler questions.
+
+  3. Each question must have exactly 4 answer options.
+
+  4. Exactly ONE option must be correct.
+
+  5. The three incorrect options must be plausible distractors.
+     Do not use obviously ridiculous answers.
+
+  6. Do not reveal the correct answer in the question text or hint.
+
+  7. Every question must have a useful hint that helps the student
+     think about the problem without directly revealing the answer.
+
+  8. Every option must contain a short explanation explaining why
+     that option is correct or incorrect.
+
+  9. For numerical questions, ensure all calculations are correct.
+
+  10. Avoid duplicate questions.
+
+  11. Vary the wording, scenarios, and concepts across questions.
+
+  12. Match the difficulty to the requested level.
+
+  13. For Nigerian examinations, use terminology and context familiar
+      to Nigerian students where appropriate.
+
+  14. If a passage is unnecessary, omit it.
+
+  OUTPUT FORMAT:
+
+  Return ONLY valid JSON.
+
+  {
+    "questions": [
+      {
+        "q": "Question text",
+        "hint": "Helpful hint",
+        "passage": "Optional passage",
+        "options": [
+          {
+            "t": "Option text",
+            "c": true,
+            "r": "Explanation"
+          },
+          {
+            "t": "Option text",
+            "c": false,
+            "r": "Explanation"
+          },
+          {
+            "t": "Option text",
+            "c": false,
+            "r": "Explanation"
+          },
+          {
+            "t": "Option text",
+            "c": false,
+            "r": "Explanation"
+          }
+        ]
+      }
+    ]
+  }
+
+  Do not include markdown.
+  Do not include commentary.
+  Do not include an answer key outside the questions.
+  `;
 
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
@@ -92,12 +175,14 @@ export async function generateQuestions(
 
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
-    throw new Error(`AI request failed (${response.status}): ${detail.slice(0, 200)}`);
+    throw new Error(
+      `AI request failed (${response.status}): ${detail.slice(0, 200)}`,
+    );
   }
 
   const data: unknown = await response.json();
-  const content = (data as { choices?: { message?: { content?: unknown } }[] })?.choices?.[0]
-    ?.message?.content;
+  const content = (data as { choices?: { message?: { content?: unknown } }[] })
+    ?.choices?.[0]?.message?.content;
 
   if (typeof content !== "string" || !content.trim()) {
     throw new Error("AI response did not include content");

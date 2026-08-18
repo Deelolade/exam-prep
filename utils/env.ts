@@ -28,7 +28,7 @@ export function requireEnv(name: string): string {
 export const getSupabaseSecretKey = () => requireEnv("SUPABASE_SECRET_KEY");
 export const getResendApiKey = () => requireEnv("RESEND_API_KEY");
 export const getEmailFrom = () => requireEnv("EMAIL_FROM");
-export const getOpenAIKey = () => requireEnv("OPENAI_API_KEY");
+export const getAIAPIKey = () => requireEnv("AI_API_KEY");
 
 // --- Server-only options (with defaults) ---
 export const getAiBaseUrl = () =>
