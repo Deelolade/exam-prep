@@ -2,31 +2,35 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { QUESTIONS } from "@/data/questions";
+import type { Question, Section } from "@/data/questions";
 import Landing from "./landing";
 import ExamView from "./exam-view";
 import Results from "./results";
 
 type View = "landing" | "exam" | "results";
 
-const EMPTY_ANSWERS = (): (number | null)[] => new Array(QUESTIONS.length).fill(null);
-const EMPTY_FLAGS = (): boolean[] => new Array(QUESTIONS.length).fill(false);
+type ExamProps = {
+  sections: Section[];
+  questions: Question[];
+  examName?: string;
+};
 
-export default function Exam() {
+export default function Exam({ sections, questions, examName }: ExamProps) {
+  const total = questions.length;
   const [view, setView] = useState<View>("landing");
   const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState<(number | null)[]>(EMPTY_ANSWERS);
-  const [flags, setFlags] = useState<boolean[]>(EMPTY_FLAGS);
+  const [answers, setAnswers] = useState<(number | null)[]>(() => new Array(total).fill(null));
+  const [flags, setFlags] = useState<boolean[]>(() => new Array(total).fill(false));
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [view, current]);
 
   const reset = useCallback(() => {
-    setAnswers(EMPTY_ANSWERS());
-    setFlags(EMPTY_FLAGS());
+    setAnswers(new Array(total).fill(null));
+    setFlags(new Array(total).fill(false));
     setCurrent(0);
-  }, []);
+  }, [total]);
 
   const startExam = () => {
     reset();
@@ -41,13 +45,13 @@ export default function Exam() {
   const finish = useCallback(() => {
     setView("results");
     const correct = answers.reduce<number>(
-      (acc, a, i) => acc + (a !== null && QUESTIONS[i].options[a].c ? 1 : 0),
+      (acc, a, i) => acc + (a !== null && questions[i].options[a].c ? 1 : 0),
       0,
     );
     toast.success("Exam submitted", {
-      description: `You scored ${correct}/${QUESTIONS.length} (${Math.round((correct / QUESTIONS.length) * 100)}%).`,
+      description: `You scored ${correct}/${total} (${Math.round((correct / total) * 100)}%).`,
     });
-  }, [answers]);
+  }, [answers, questions, total]);
 
   const handleSubmit = () => {
     const unanswered = answers.filter((a) => a === null).length;
@@ -85,23 +89,34 @@ export default function Exam() {
 
   return (
     <div className="min-h-screen bg-surface text-dark">
-      {view === "landing" && <Landing onStart={startExam} />}
+      {view === "landing" && (
+        <Landing
+          sections={sections}
+          questionCount={total}
+          examName={examName}
+          onStart={startExam}
+        />
+      )}
 
       {view === "exam" && (
         <ExamView
+          sections={sections}
+          questions={questions}
           current={current}
           answers={answers}
           flags={flags}
           onPick={handlePick}
           onJump={setCurrent}
           onPrev={() => setCurrent((c) => Math.max(0, c - 1))}
-          onNext={() => setCurrent((c) => Math.min(QUESTIONS.length - 1, c + 1))}
+          onNext={() => setCurrent((c) => Math.min(total - 1, c + 1))}
           onSubmit={handleSubmit}
           onToggleFlag={toggleFlag}
         />
       )}
 
-      {view === "results" && <Results answers={answers} onRetake={retakeExam} />}
+      {view === "results" && (
+        <Results sections={sections} questions={questions} answers={answers} onRetake={retakeExam} />
+      )}
     </div>
   );
 }

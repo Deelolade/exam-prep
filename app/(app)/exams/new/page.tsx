@@ -42,6 +42,7 @@ export default function NewExamPage() {
   const [customMinutes, setCustomMinutes] = useState("");
   const [days, setDays] = useState<string[]>([]);
   const [level, setLevel] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const filteredExams = POPULAR_EXAMS.filter((e) =>
     e.toLowerCase().includes(search.toLowerCase()),
@@ -86,25 +87,53 @@ export default function NewExamPage() {
 
   const back = () => setStep((s) => Math.max(0, s - 1));
 
-  const finish = () => {
-    toast.success("Preparation plan created", {
-      description: `${examName} is ready. Your personalized practice plan will guide you.`,
-    });
-    router.push("/exams");
+  const finish = async () => {
+    setSaving(true);
+    try {
+      const response = await fetch("/api/exams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: examName,
+          institution: exam === "Custom exam" ? custom.institution : undefined,
+          exam_date: examDate || undefined,
+          daily_minutes: dailyMinutes || undefined,
+          level: level || undefined,
+          subjects,
+        }),
+      });
+
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        toast.error(result?.error ?? "Failed to create exam");
+        return;
+      }
+
+      toast.success("Preparation plan created", {
+        description: `${examName} is ready. Your personalized practice plan will guide you.`,
+      });
+      router.push("/exams");
+    } catch {
+      toast.error("Failed to create exam");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const hoursPerDay =
+  const dailyMinutes =
     time === "Custom"
-      ? Math.round((parseInt(customMinutes, 10) || 0) / 60)
+      ? parseInt(customMinutes, 10) || 0
       : time === "15 minutes"
-        ? 0.25
+        ? 15
         : time === "30 minutes"
-          ? 0.5
+          ? 30
           : time === "1 hour"
-            ? 1
+            ? 60
             : time === "2 hours"
-              ? 2
+              ? 120
               : 0;
+
+  const hoursPerDay = dailyMinutes > 0 ? dailyMinutes / 60 : 0;
 
   const daysLabel = examDate ? `${daysUntil(examDate)} days` : "—";
 
@@ -462,9 +491,13 @@ export default function NewExamPage() {
               <FiChevronLeft className="w-4 h-4" aria-hidden="true" />
               Back
             </button>
-            <button onClick={finish} className={BTN_GOLD}>
-              Start preparation
-              <FiArrowRight className="w-4 h-4" aria-hidden="true" />
+            <button
+              onClick={finish}
+              disabled={saving}
+              className={`${BTN_GOLD} disabled:opacity-60 disabled:cursor-not-allowed`}
+            >
+              {saving ? "Creating..." : "Start preparation"}
+              {!saving && <FiArrowRight className="w-4 h-4" aria-hidden="true" />}
             </button>
           </div>
         </div>

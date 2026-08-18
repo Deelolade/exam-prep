@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { TbBulb } from "react-icons/tb";
-import { SECTIONS, type Question } from "@/data/questions";
+import type { Question, Section } from "@/data/questions";
 
 type QuestionCardProps = {
+  sections: Section[];
   question: Question;
   index: number;
   total: number;
@@ -12,9 +13,16 @@ type QuestionCardProps = {
   onPick: (optionIndex: number) => void;
 };
 
-export default function QuestionCard({ question, index, total, picked, onPick }: QuestionCardProps) {
+export default function QuestionCard({
+  sections,
+  question,
+  index,
+  total,
+  picked,
+  onPick,
+}: QuestionCardProps) {
   const [hintOpen, setHintOpen] = useState(false);
-  const section = SECTIONS.find((s) => s.code === question.section);
+  const section = sections.find((s) => s.code === question.section);
   const locked = picked !== null;
 
   return (

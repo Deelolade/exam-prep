@@ -2,19 +2,21 @@
 
 import { useState } from "react";
 import { FiCheck, FiX, FiList, FiRotateCcw, FiAlertCircle } from "react-icons/fi";
-import { SECTIONS, QUESTIONS } from "@/data/questions";
+import type { Question, Section } from "@/data/questions";
 
 type ResultsProps = {
+  sections: Section[];
+  questions: Question[];
   answers: (number | null)[];
   onRetake: () => void;
 };
 
-export default function Results({ answers, onRetake }: ResultsProps) {
+export default function Results({ sections, questions, answers, onRetake }: ResultsProps) {
   const [showReview, setShowReview] = useState(false);
 
-  const total = QUESTIONS.length;
+  const total = questions.length;
   const correct = answers.reduce<number>(
-    (acc, a, i) => acc + (a !== null && QUESTIONS[i].options[a].c ? 1 : 0),
+    (acc, a, i) => acc + (a !== null && questions[i].options[a].c ? 1 : 0),
     0,
   );
   const pct = Math.round((correct / total) * 100);
@@ -30,12 +32,12 @@ export default function Results({ answers, onRetake }: ResultsProps) {
         </div>
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2.5 mb-7">
-          {SECTIONS.map((s) => {
-            const indexes = QUESTIONS.map((q, i) => ({ q, i }))
+          {sections.map((s) => {
+            const indexes = questions.map((q, i) => ({ q, i }))
               .filter((o) => o.q.section === s.code)
               .map((o) => o.i);
             const sectionCorrect = indexes.reduce(
-              (acc, i) => acc + (answers[i] !== null && QUESTIONS[i].options[answers[i]].c ? 1 : 0),
+              (acc, i) => acc + (answers[i] !== null && questions[i].options[answers[i]].c ? 1 : 0),
               0,
             );
 
@@ -73,7 +75,7 @@ export default function Results({ answers, onRetake }: ResultsProps) {
           <>
             <p className="font-mono text-xs tracking-[0.12em] uppercase text-slate-500 mb-3.5">Full review</p>
             <div className="flex flex-col gap-3">
-              {QUESTIONS.map((q, i) => {
+              {questions.map((q, i) => {
                 const a = answers[i];
 
                 return (

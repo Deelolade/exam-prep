@@ -6,12 +6,14 @@ import {
   FiTarget,
   FiFlag,
 } from "react-icons/fi";
-import { SECTIONS, QUESTIONS } from "@/data/questions";
+import type { Question, Section } from "@/data/questions";
 import SegmentedBar from "./segmented-bar";
 import Navigator from "./navigator";
 import QuestionCard from "./question-card";
 
 type ExamViewProps = {
+  sections: Section[];
+  questions: Question[];
   current: number;
   answers: (number | null)[];
   flags: boolean[];
@@ -24,6 +26,8 @@ type ExamViewProps = {
 };
 
 export default function ExamView({
+  sections,
+  questions,
   current,
   answers,
   flags,
@@ -34,11 +38,11 @@ export default function ExamView({
   onSubmit,
   onToggleFlag,
 }: ExamViewProps) {
-  const question = QUESTIONS[current];
-  const total = QUESTIONS.length;
+  const question = questions[current];
+  const total = questions.length;
   const answeredCount = answers.filter((a) => a !== null).length;
   const score = answers.reduce<number>(
-    (acc, a, i) => acc + (a !== null && QUESTIONS[i].options[a].c ? 1 : 0),
+    (acc, a, i) => acc + (a !== null && questions[i].options[a].c ? 1 : 0),
     0,
   );
   const isFlagged = flags[current];
@@ -67,7 +71,7 @@ export default function ExamView({
             </span>
           </div>
         </div>
-        <SegmentedBar sections={SECTIONS} questions={QUESTIONS} answers={answers} />
+        <SegmentedBar sections={sections} questions={questions} answers={answers} />
       </header>
 
       <main className="flex-1 max-w-295 w-full mx-auto flex flex-col lg:flex-row gap-5 px-5 pt-5 pb-10 items-start">
@@ -75,6 +79,7 @@ export default function ExamView({
 
         <div className="flex-1 min-w-0 w-full">
           <QuestionCard
+            sections={sections}
             question={question}
             index={current}
             total={total}

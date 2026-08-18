@@ -1,25 +1,12 @@
-import Link from "next/link";
-import { FiArrowRight, FiZap } from "react-icons/fi";
+import { FiZap } from "react-icons/fi";
 
-import { BTN_GOLD, CARD, SECTION_TITLE } from "@/components/app/ui";
-import { AI_INSIGHT } from "@/data/study";
+import { CARD, SECTION_TITLE } from "@/components/app/ui";
+import { getExamStats } from "@/lib/exam-data";
 
-const RECENT_INSIGHTS = [
-  {
-    title: "Weak areas detected",
-    detail: "Probability and algebra in Mathematics are dragging your accuracy below 70%.",
-  },
-  {
-    title: "Consistency is paying off",
-    detail: "Practicing 4 days in a row has improved your average accuracy by 6 points.",
-  },
-  {
-    title: "Time management",
-    detail: "You're 20% slower on Physics questions — try a timed session this week.",
-  },
-];
+export default async function InsightsPage() {
+  const stats = await getExamStats();
+  const hasPractice = stats.totalAnswered > 0;
 
-export default function InsightsPage() {
   return (
     <div className="space-y-8">
       <div>
@@ -34,26 +21,19 @@ export default function InsightsPage() {
           <FiZap className="w-4 h-4 text-primary" aria-hidden="true" />
           <h2 className="text-sm font-semibold text-dark">Latest insight</h2>
         </div>
-        <p className="mt-3 text-sm leading-6 text-slate-600">{AI_INSIGHT.headline}</p>
-        <p className="mt-3 text-sm leading-6 text-slate-600">
-          <span className="font-semibold text-dark">Recommendation: </span>
-          {AI_INSIGHT.recommendation}
+        <p className="mt-3 text-sm leading-6 text-slate-500">
+          {hasPractice
+            ? "Insights are being generated from your practice history."
+            : "No insights yet — answer some questions and AI analysis will appear here."}
         </p>
-        <Link href="/practice" className={`${BTN_GOLD} mt-5`}>
-          Practice weak areas
-          <FiArrowRight className="w-4 h-4" aria-hidden="true" />
-        </Link>
       </section>
 
       <section>
         <h2 className={SECTION_TITLE}>Recent insights</h2>
-        <div className="mt-3 space-y-3">
-          {RECENT_INSIGHTS.map((insight) => (
-            <div key={insight.title} className={`${CARD} p-5`}>
-              <p className="text-sm font-semibold text-dark">{insight.title}</p>
-              <p className="mt-1 text-[13px] leading-6 text-slate-500">{insight.detail}</p>
-            </div>
-          ))}
+        <div className={`${CARD} mt-3 p-8 text-center text-sm text-slate-500`}>
+          {hasPractice
+            ? "Your latest analysis will be listed here."
+            : "Start practicing to build up your analysis history."}
         </div>
       </section>
     </div>
