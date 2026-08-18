@@ -25,7 +25,7 @@ export function requireEnv(name: string): string {
 }
 
 // --- Server-only secrets (validated lazily) ---
-export const getSupabaseServiceRoleKey = () => requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+export const getSupabaseSecretKey = () => requireEnv("SUPABASE_SECRET_KEY");
 export const getResendApiKey = () => requireEnv("RESEND_API_KEY");
 export const getEmailFrom = () => requireEnv("EMAIL_FROM");
 export const getOpenAIKey = () => requireEnv("OPENAI_API_KEY");

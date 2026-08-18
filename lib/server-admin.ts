@@ -1,11 +1,12 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { SUPABASE_URL, getSupabaseServiceRoleKey } from "@/utils/env";
+import { SUPABASE_URL, getSupabaseSecretKey } from "@/utils/env";
 
 /**
- * Service-role client for trusted server-side writes (e.g. persisting
- * AI-generated questions). Bypasses RLS — never expose this client or the
- * key to the browser. Requires SUPABASE_SERVICE_ROLE_KEY in the server env.
+ * Server-side client with the Supabase secret key (sb_secret_...) for
+ * trusted writes (e.g. persisting AI-generated questions). Bypasses RLS —
+ * never expose this client or the key to the browser. Requires
+ * SUPABASE_SECRET_KEY in the server env.
  */
 export function createAdminClient() {
-  return createSupabaseClient(SUPABASE_URL, getSupabaseServiceRoleKey());
+  return createSupabaseClient(SUPABASE_URL, getSupabaseSecretKey());
 }
