@@ -2,47 +2,42 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
 import {
   FiBookOpen,
   FiEdit3,
   FiGrid,
   FiLogOut,
-  FiMenu,
   FiSettings,
   FiTrendingUp,
-  FiX,
   FiZap,
 } from "react-icons/fi";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/client";
+import type { IconType } from "react-icons";
 
-const NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: FiGrid },
-  { href: "/exams", label: "My Exams", icon: FiBookOpen },
-  { href: "/practice", label: "Practice", icon: FiEdit3 },
-  { href: "/progress", label: "Progress", icon: FiTrendingUp },
-  { href: "/insights", label: "AI Insights", icon: FiZap },
+type BaseNavItem = { href: string; label: string; icon: IconType };
+
+type NavItem = BaseNavItem & { shortLabel: string };
+
+const NAV: NavItem[] = [
+  { href: "/dashboard", label: "Dashboard", shortLabel: "Dashboard", icon: FiGrid },
+  { href: "/exams", label: "My Exams", shortLabel: "Exams", icon: FiBookOpen },
+  { href: "/practice", label: "Practice", shortLabel: "Practice", icon: FiEdit3 },
+  { href: "/progress", label: "Progress", shortLabel: "Progress", icon: FiTrendingUp },
+  { href: "/insights", label: "AI Insights", shortLabel: "Insights", icon: FiZap },
 ];
 
-const SETTINGS = { href: "/settings", label: "Settings", icon: FiSettings };
+const SETTINGS: BaseNavItem = { href: "/settings", label: "Settings", icon: FiSettings };
 
-type NavItem = (typeof NAV)[number];
+function isActive(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
-function NavLink({
-  item,
-  active,
-  onNavigate,
-}: {
-  item: NavItem;
-  active: boolean;
-  onNavigate?: () => void;
-}) {
+function NavLink({ item, active }: { item: BaseNavItem; active: boolean }) {
   const Icon = item.icon;
   return (
     <Link
       href={item.href}
-      onClick={onNavigate}
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
         active
@@ -57,15 +52,8 @@ function NavLink({
   );
 }
 
-function SidebarContent({
-  pathname,
-  userEmail,
-  onNavigate,
-}: {
-  pathname: string;
-  userEmail?: string;
-  onNavigate?: () => void;
-}) {
+/** Desktop sidebar — fixed on the left (lg and up). */
+function DesktopSidebar({ pathname, userEmail }: { pathname: string; userEmail?: string }) {
   const router = useRouter();
   const initials = (userEmail ?? "?")
     .split("@")[0]
@@ -88,20 +76,14 @@ function SidebarContent({
 
       <nav className="flex-1 space-y-1 px-3 py-4">
         {NAV.map((item) => (
-          <NavLink
-            key={item.href}
-            item={item}
-            active={pathname === item.href || pathname.startsWith(`${item.href}/`)}
-            onNavigate={onNavigate}
-          />
+          <NavLink key={item.href} item={item} active={isActive(pathname, item.href)} />
         ))}
       </nav>
 
       <div className="px-3 pb-4">
         <NavLink
           item={SETTINGS}
-          active={pathname === SETTINGS.href || pathname.startsWith(`${SETTINGS.href}/`)}
-          onNavigate={onNavigate}
+          active={isActive(pathname, SETTINGS.href)}
         />
       </div>
 
@@ -127,6 +109,36 @@ function SidebarContent({
   );
 }
 
+/** Mobile bottom navigation — fixed footer bar (below lg). */
+function BottomNav({ pathname }: { pathname: string }) {
+  return (
+    <nav
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
+      aria-label="Primary"
+    >
+      <div className="mx-auto flex max-w-md">
+        {NAV.map((item) => {
+          const active = isActive(pathname, item.href);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition",
+                active ? "text-primary" : "text-slate-500 hover:text-slate-700",
+              )}
+            >
+              <Icon className="w-5 h-5" aria-hidden="true" />
+              {item.shortLabel}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
 export default function AppShell({
   userEmail,
   children,
@@ -135,13 +147,12 @@ export default function AppShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <div className="min-h-svh bg-surface">
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 bg-dark lg:block">
-        <SidebarContent pathname={pathname} userEmail={userEmail} />
+        <DesktopSidebar pathname={pathname} userEmail={userEmail} />
       </aside>
 
       {/* Mobile topbar */}
@@ -149,43 +160,23 @@ export default function AppShell({
         <span className="text-[16px] font-semibold tracking-tight text-white">
           ExamPrep<span className="text-primary">.run</span>
         </span>
-        <button
-          onClick={() => setDrawerOpen(true)}
-          aria-label="Open menu"
+        <Link
+          href="/settings"
+          aria-label="Settings"
           className="flex h-9 w-9 items-center justify-center rounded-lg text-white/80 hover:text-white hover:bg-white/[0.06] transition"
         >
-          <FiMenu className="w-5 h-5" aria-hidden="true" />
-        </button>
+          <FiSettings className="w-5 h-5" aria-hidden="true" />
+        </Link>
       </header>
 
-      {/* Mobile drawer */}
-      {drawerOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setDrawerOpen(false)}
-            aria-hidden="true"
-          />
-          <div className="absolute inset-y-0 left-0 w-72 max-w-[85%] bg-dark shadow-2xl">
-            <button
-              onClick={() => setDrawerOpen(false)}
-              aria-label="Close menu"
-              className="absolute right-3 top-3.5 flex h-8 w-8 items-center justify-center rounded-lg text-white/60 hover:text-white transition"
-            >
-              <FiX className="w-4 h-4" aria-hidden="true" />
-            </button>
-            <SidebarContent
-              pathname={pathname}
-              userEmail={userEmail}
-              onNavigate={() => setDrawerOpen(false)}
-            />
-          </div>
-        </div>
-      )}
+      {/* Mobile bottom nav */}
+      <BottomNav pathname={pathname} />
 
       {/* Main content */}
       <main className="lg:pl-60">
-        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-10">{children}</div>
+        <div className="mx-auto max-w-5xl px-4 py-8 pb-28 sm:px-6 lg:px-10 lg:pb-10">
+          {children}
+        </div>
       </main>
     </div>
   );
