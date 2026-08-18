@@ -196,27 +196,33 @@ export async function getExamQuestions(exam: StoredExam): Promise<Question[] | n
   return questions.length > 0 ? questions : null;
 }
 
-/** Generates one subject's set, retrying once on transient failures. */
+/** Generates one subject's set with retries + backoff (rate-limit friendly). */
 async function generateSubjectQuestions(
   subject: StoredExamSubject,
   nameByCode: Map<string, string>,
   examName: string,
 ): Promise<Question[]> {
   const code = subject.code as string;
-  let lastError: unknown;
+  const input = {
+    subjectCode: code,
+    subjectName: nameByCode.get(code) ?? subject.name,
+    count: QUESTIONS_PER_SUBJECT,
+    examType: examName,
+  };
 
-  for (let attempt = 0; attempt < 2; attempt++) {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      return await generateQuestions({
-        subjectCode: code,
-        subjectName: nameByCode.get(code) ?? subject.name,
-        count: QUESTIONS_PER_SUBJECT,
-        examType: examName,
-      });
+      return await generateQuestions(input);
     } catch (error) {
       lastError = error;
-      if (attempt === 0) {
-        console.error(`Retrying question generation for ${subject.name}:`, error);
+      if (attempt < 2) {
+        const delay = 2000 * (attempt + 1);
+        console.error(
+          `Question generation failed for ${subject.name}; retrying in ${delay}ms:`,
+          error,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
@@ -225,14 +231,46 @@ async function generateSubjectQuestions(
 }
 
 /**
- * Returns the exam's questions, generating a fresh AI set per subject (scaled
- * by the number of selected subjects) and persisting it to Supabase the first
- * time. Returns null if the exam has no subjects with a question bank.
+ * Generates sets for the given subjects with limited concurrency, spacing
+ * batches apart so parallel calls don't trip provider rate limits.
+ */
+async function generateForSubjects(
+  subjects: StoredExamSubject[],
+  nameByCode: Map<string, string>,
+  examName: string,
+): Promise<Question[]> {
+  const CONCURRENCY = 2;
+  const generated: Question[] = [];
+
+  for (let i = 0; i < subjects.length; i += CONCURRENCY) {
+    const batch = subjects.slice(i, i + CONCURRENCY);
+    const results = await Promise.allSettled(
+      batch.map((subject) => generateSubjectQuestions(subject, nameByCode, examName)),
+    );
+
+    results.forEach((result, idx) => {
+      if (result.status === "fulfilled") {
+        generated.push(...result.value);
+      } else {
+        console.error(`Failed to generate questions for ${batch[idx].name}:`, result.reason);
+      }
+    });
+
+    if (i + CONCURRENCY < subjects.length) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+  }
+
+  return generated;
+}
+
+/**
+ * Returns the exam's questions, generating a fresh AI set per missing subject
+ * (scaled by the number of selected subjects) and persisting it to Supabase.
+ * Subjects that already have questions are never regenerated. Returns null if
+ * the exam has no subjects with a question bank.
  */
 export async function ensureExamQuestions(exam: StoredExam): Promise<Question[] | null> {
-  const existing = await getExamQuestions(exam);
-  if (existing) return existing;
-
   const coded = exam.subjects.filter((s) => s.code !== null && s.code !== undefined);
   if (coded.length === 0) return null;
 
@@ -247,62 +285,44 @@ export async function ensureExamQuestions(exam: StoredExam): Promise<Question[] 
     );
   const nameByCode = new Map((subjectRows ?? []).map((s) => [s.code, s.name]));
 
-  const results = await Promise.allSettled(
-    coded.map((subject) => generateSubjectQuestions(subject, nameByCode, exam.name)),
-  );
+  // Only generate for subjects that still need questions.
+  const existing = (await getExamQuestions(exam)) ?? [];
+  const covered = new Set(existing.map((q) => q.section));
+  const missing = coded.filter((s) => !covered.has(s.code as string));
 
-  const rows: {
-    subject_code: string;
-    question: string;
-    passage: string | null;
-    hint: string;
-    options: Question["options"];
-    source: string;
-    model: string;
-    sort_order: number;
-    exam_id: string;
-  }[] = [];
-  const questions: Question[] = [];
-  let order = 0;
+  if (missing.length === 0) return existing;
 
-  results.forEach((result) => {
-    if (result.status !== "fulfilled") {
-      console.error("Subject question generation failed:", result.reason);
-      return;
+  const generated = await generateForSubjects(missing, nameByCode, exam.name);
+
+  let order = existing.length;
+  const rows = generated.map((q) => ({
+    subject_code: q.section,
+    question: q.q,
+    passage: q.passage ?? null,
+    hint: q.hint,
+    options: q.options,
+    source: "ai",
+    model: getAiModel(),
+    sort_order: order++,
+    exam_id: exam.id,
+  }));
+
+  if (rows.length > 0) {
+    // Conflict-safe: if another run already inserted these (or the model
+    // repeated itself within this batch), duplicates are ignored.
+    const { error } = await admin.from("questions").upsert(rows, {
+      onConflict: "exam_id,question",
+      ignoreDuplicates: true,
+    });
+    if (error) {
+      console.error("Failed to persist exam questions:", error);
+      throw error;
     }
-    for (const q of result.value) {
-      questions.push(q);
-      rows.push({
-        subject_code: q.section,
-        question: q.q,
-        passage: q.passage ?? null,
-        hint: q.hint,
-        options: q.options,
-        source: "ai",
-        model: getAiModel(),
-        sort_order: order++,
-        exam_id: exam.id,
-      });
-    }
-  });
-
-  if (rows.length === 0) return null;
-
-  // Conflict-safe: if another run already inserted these (or the model
-  // repeated itself within this batch), the duplicates are ignored rather
-  // than inserted a second time.
-  const { error } = await admin.from("questions").upsert(rows, {
-    onConflict: "exam_id,question",
-    ignoreDuplicates: true,
-  });
-  if (error) {
-    console.error("Failed to persist exam questions:", error);
-    throw error;
   }
 
   // Re-read so the returned set matches what's actually in the DB (in case a
   // concurrent run won the race).
-  return (await getExamQuestions(exam)) ?? questions;
+  return (await getExamQuestions(exam)) ?? existing;
 }
 
 /** Progress (0-100) for one exam based on answered vs total questions in its subjects. */
