@@ -22,6 +22,23 @@ function isNonEmptyString(value: unknown): value is string {
 }
 
 /**
+ * Extracts a JSON object from a model response. Tolerates markdown code
+ * fences and surrounding commentary by slicing between the first `{` and the
+ * last `}`.
+ */
+function extractJson(content: string): string {
+  const trimmed = content.trim();
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = (fenced ? fenced[1].trim() : trimmed).trim();
+  const start = candidate.indexOf("{");
+  const end = candidate.lastIndexOf("}");
+  if (start !== -1 && end > start) {
+    return candidate.slice(start, end + 1);
+  }
+  return candidate;
+}
+
+/**
  * Validates one AI-generated question. Returns the Question fields (without
  * `section`, which is derived from the subject) or null if malformed.
  */
@@ -190,7 +207,7 @@ export async function generateQuestions(
 
   let parsed: { questions?: RawQuestion[] };
   try {
-    parsed = JSON.parse(content) as { questions?: RawQuestion[] };
+    parsed = JSON.parse(extractJson(content)) as { questions?: RawQuestion[] };
   } catch {
     throw new Error("AI response was not valid JSON");
   }
