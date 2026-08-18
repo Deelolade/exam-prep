@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/server";
-import {
-  SECTIONS as FALLBACK_SECTIONS,
-  QUESTIONS as FALLBACK_QUESTIONS,
-  type Question,
-  type Section,
-} from "@/data/questions";
+import { createAdminClient } from "@/lib/server-admin";
+import { generateQuestions } from "@/lib/ai/generate-questions";
+import { getAiModel } from "@/utils/env";
+import type { Question, Section } from "@/data/questions";
+
+/** Fresh AI questions generated per subject when an exam's set is prepared. */
+export const QUESTIONS_PER_SUBJECT = 10;
 
 // ---------- Exam content (subjects + questions) ----------
 
@@ -15,61 +16,6 @@ type DbQuestionRow = {
   hint: string;
   options: Question["options"];
 };
-
-type DbSubjectRow = {
-  code: string;
-  name: string;
-  color: string;
-};
-
-/**
- * Loads exam content from Supabase (subjects + questions). Falls back to the
- * static bank in data/questions.ts if the tables are missing or empty, so the
- * app keeps working before the migrations + seed are applied.
- */
-export async function getExamContent(): Promise<{
-  sections: Section[];
-  questions: Question[];
-}> {
-  const supabase = await createClient();
-
-  const [{ data: subjects, error: subjectsError }, { data: rows, error: questionsError }] =
-    await Promise.all([
-      supabase.from("subjects").select("code, name, color").order("sort_order"),
-      supabase
-        .from("questions")
-        .select("subject_code, question, passage, hint, options")
-        .order("sort_order"),
-    ]);
-
-  if (
-    subjectsError ||
-    questionsError ||
-    !subjects ||
-    !rows ||
-    subjects.length === 0 ||
-    rows.length === 0
-  ) {
-    return { sections: FALLBACK_SECTIONS, questions: FALLBACK_QUESTIONS };
-  }
-
-  const questions: Question[] = (rows as DbQuestionRow[]).map((row) => ({
-    section: row.subject_code,
-    q: row.question,
-    hint: row.hint,
-    passage: row.passage ?? undefined,
-    options: row.options,
-  }));
-
-  const sections: Section[] = (subjects as DbSubjectRow[]).map((subject) => ({
-    code: subject.code,
-    name: subject.name,
-    color: subject.color,
-    count: questions.filter((q) => q.section === subject.code).length,
-  }));
-
-  return { sections, questions };
-}
 
 // ---------- Student exams + practice stats ----------
 
@@ -198,6 +144,120 @@ export async function getExamStats(): Promise<ExamStats> {
   }
 
   return { questionsBySubject, totalAnswered, overallCorrect, answersByDay };
+}
+
+/** All subjects, for building the section legend of an exam's practice set. */
+export async function getSubjectSections(): Promise<Section[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("subjects")
+    .select("code, name, color")
+    .order("sort_order");
+
+  if (error || !data) return [];
+  return data.map((s) => ({ code: s.code, name: s.name, color: s.color, count: 0 }));
+}
+
+/** The exam's own practice questions (exam-scoped), or null when none exist yet. */
+export async function getExamQuestions(exam: StoredExam): Promise<Question[] | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("questions")
+    .select("subject_code, question, passage, hint, options")
+    .eq("exam_id", exam.id)
+    .order("sort_order");
+
+  if (error || !data || data.length === 0) return null;
+
+  return (data as DbQuestionRow[]).map((row) => ({
+    section: row.subject_code,
+    q: row.question,
+    hint: row.hint,
+    passage: row.passage ?? undefined,
+    options: row.options,
+  }));
+}
+
+/**
+ * Returns the exam's questions, generating a fresh AI set per subject (scaled
+ * by the number of selected subjects) and persisting it to Supabase the first
+ * time. Returns null if the exam has no subjects with a question bank.
+ */
+export async function ensureExamQuestions(exam: StoredExam): Promise<Question[] | null> {
+  const existing = await getExamQuestions(exam);
+  if (existing) return existing;
+
+  const coded = exam.subjects.filter((s) => s.code !== null && s.code !== undefined);
+  if (coded.length === 0) return null;
+
+  const admin = createAdminClient();
+
+  const { data: subjectRows } = await admin
+    .from("subjects")
+    .select("code, name")
+    .in(
+      "code",
+      coded.map((s) => s.code as string),
+    );
+  const nameByCode = new Map((subjectRows ?? []).map((s) => [s.code, s.name]));
+
+  const results = await Promise.allSettled(
+    coded.map((subject) =>
+      generateQuestions({
+        subjectCode: subject.code as string,
+        subjectName: nameByCode.get(subject.code as string) ?? subject.name,
+        count: QUESTIONS_PER_SUBJECT,
+        examType: exam.name,
+      }),
+    ),
+  );
+
+  const rows: {
+    subject_code: string;
+    question: string;
+    passage: string | null;
+    hint: string;
+    options: Question["options"];
+    source: string;
+    model: string;
+    sort_order: number;
+    exam_id: string;
+  }[] = [];
+  const questions: Question[] = [];
+  let order = 0;
+
+  results.forEach((result) => {
+    if (result.status !== "fulfilled") {
+      console.error("Subject question generation failed:", result.reason);
+      return;
+    }
+    for (const q of result.value) {
+      questions.push(q);
+      rows.push({
+        subject_code: q.section,
+        question: q.q,
+        passage: q.passage ?? null,
+        hint: q.hint,
+        options: q.options,
+        source: "ai",
+        model: getAiModel(),
+        sort_order: order++,
+        exam_id: exam.id,
+      });
+    }
+  });
+
+  if (rows.length === 0) return null;
+
+  const { error } = await admin.from("questions").insert(rows);
+  if (error) {
+    console.error("Failed to persist exam questions:", error);
+    throw error;
+  }
+
+  return questions;
 }
 
 /** Progress (0-100) for one exam based on answered vs total questions in its subjects. */

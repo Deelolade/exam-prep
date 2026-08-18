@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FiArrowRight, FiCalendar, FiPlus } from "react-icons/fi";
 
+import DeleteExamButton from "@/components/app/delete-exam-button";
 import { BTN_GOLD, BTN_OUTLINE, CARD } from "@/components/app/ui";
 import { formatDateShort } from "@/data/study";
 import { examProgress, getExamStats, getUserExams } from "@/lib/exam-data";
@@ -42,8 +43,13 @@ export default async function ExamsPage() {
             const subjectNames = exam.subjects.map((s) => s.name).join(" + ");
             return (
               <div key={exam.id} className={`${CARD} flex flex-col p-5`}>
-                <h2 className="text-lg font-semibold tracking-tight text-dark">{exam.name}</h2>
-                <p className="mt-0.5 text-[13px] text-slate-500">{subjectNames}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-semibold tracking-tight text-dark">{exam.name}</h2>
+                    <p className="mt-0.5 text-[13px] text-slate-500">{subjectNames}</p>
+                  </div>
+                  <DeleteExamButton examId={exam.id} examName={exam.name} />
+                </div>
 
                 <p className="mt-4 flex items-center gap-1.5 text-[13px] text-slate-500">
                   <FiCalendar className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />

@@ -176,7 +176,7 @@ export async function generateQuestions(
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     throw new Error(
-      `AI request failed (${response.status}): ${detail.slice(0, 200)}`,
+      `AI request failed (${response.status}) for ${baseUrl}: ${detail.slice(0, 300)}`,
     );
   }
 
