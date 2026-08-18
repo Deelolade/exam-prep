@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { render } from "react-email";
 import WelcomeEmail from "@/emails/welcome-email";
 import { sendEmail } from "@/lib/email";
+import { APP_URL } from "@/utils/env";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin;
+  const appUrl = APP_URL ?? new URL(request.url).origin;
   const html = await render(<WelcomeEmail appUrl={appUrl} />);
 
   try {

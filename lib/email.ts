@@ -1,5 +1,5 @@
 import { resend } from "./resend";
-import { EMAIL_FROM } from "../utils/env";
+import { getEmailFrom } from "../utils/env";
 
 type EmailProps = {
   to: string;
@@ -10,7 +10,7 @@ type EmailProps = {
 export const sendEmail = async ({ to, subject, html }: EmailProps) => {
   const { data, error } = await resend.emails.send({
     to,
-    from: EMAIL_FROM,
+    from: getEmailFrom(),
     subject,
     html,
   });

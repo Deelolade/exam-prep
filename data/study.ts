@@ -119,7 +119,6 @@ export const SUBJECT_OPTIONS = [
   "Mathematics",
   "Physics",
   "Chemistry",
-  "Computer Engineering",
   "Biology",
   "English",
   "Current Affairs",
