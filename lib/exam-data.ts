@@ -159,7 +159,13 @@ export async function getSubjectSections(): Promise<Section[]> {
   return data.map((s) => ({ code: s.code, name: s.name, color: s.color, count: 0 }));
 }
 
-/** The exam's own practice questions (exam-scoped), or null when none exist yet. */
+
+
+/**
+ * The exam's own practice questions (exam-scoped), or null when none exist
+ * yet. Deduplicates by question text (earliest row wins) so a second
+ * generation run — or a model that repeats itself — can't surface doubles.
+ */
 export async function getExamQuestions(exam: StoredExam): Promise<Question[] | null> {
   const supabase = await createClient();
 
@@ -167,17 +173,55 @@ export async function getExamQuestions(exam: StoredExam): Promise<Question[] | n
     .from("questions")
     .select("subject_code, question, passage, hint, options")
     .eq("exam_id", exam.id)
-    .order("sort_order");
+    .order("sort_order")
+    .order("created_at")
+    .order("id");
 
   if (error || !data || data.length === 0) return null;
 
-  return (data as DbQuestionRow[]).map((row) => ({
-    section: row.subject_code,
-    q: row.question,
-    hint: row.hint,
-    passage: row.passage ?? undefined,
-    options: row.options,
-  }));
+  const seen = new Set<string>();
+  const questions: Question[] = [];
+  for (const row of data as DbQuestionRow[]) {
+    if (seen.has(row.question)) continue;
+    seen.add(row.question);
+    questions.push({
+      section: row.subject_code,
+      q: row.question,
+      hint: row.hint,
+      passage: row.passage ?? undefined,
+      options: row.options,
+    });
+  }
+
+  return questions.length > 0 ? questions : null;
+}
+
+/** Generates one subject's set, retrying once on transient failures. */
+async function generateSubjectQuestions(
+  subject: StoredExamSubject,
+  nameByCode: Map<string, string>,
+  examName: string,
+): Promise<Question[]> {
+  const code = subject.code as string;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await generateQuestions({
+        subjectCode: code,
+        subjectName: nameByCode.get(code) ?? subject.name,
+        count: QUESTIONS_PER_SUBJECT,
+        examType: examName,
+      });
+    } catch (error) {
+      lastError = error;
+      if (attempt === 0) {
+        console.error(`Retrying question generation for ${subject.name}:`, error);
+      }
+    }
+  }
+
+  throw lastError;
 }
 
 /**
@@ -204,14 +248,7 @@ export async function ensureExamQuestions(exam: StoredExam): Promise<Question[] 
   const nameByCode = new Map((subjectRows ?? []).map((s) => [s.code, s.name]));
 
   const results = await Promise.allSettled(
-    coded.map((subject) =>
-      generateQuestions({
-        subjectCode: subject.code as string,
-        subjectName: nameByCode.get(subject.code as string) ?? subject.name,
-        count: QUESTIONS_PER_SUBJECT,
-        examType: exam.name,
-      }),
-    ),
+    coded.map((subject) => generateSubjectQuestions(subject, nameByCode, exam.name)),
   );
 
   const rows: {
@@ -251,13 +288,21 @@ export async function ensureExamQuestions(exam: StoredExam): Promise<Question[] 
 
   if (rows.length === 0) return null;
 
-  const { error } = await admin.from("questions").insert(rows);
+  // Conflict-safe: if another run already inserted these (or the model
+  // repeated itself within this batch), the duplicates are ignored rather
+  // than inserted a second time.
+  const { error } = await admin.from("questions").upsert(rows, {
+    onConflict: "exam_id,question",
+    ignoreDuplicates: true,
+  });
   if (error) {
     console.error("Failed to persist exam questions:", error);
     throw error;
   }
 
-  return questions;
+  // Re-read so the returned set matches what's actually in the DB (in case a
+  // concurrent run won the race).
+  return (await getExamQuestions(exam)) ?? questions;
 }
 
 /** Progress (0-100) for one exam based on answered vs total questions in its subjects. */
