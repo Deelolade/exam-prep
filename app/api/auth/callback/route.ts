@@ -1,28 +1,12 @@
-import { createClient } from "@/lib/server"
-import { NextResponse } from "next/server"
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
-
-  const code = searchParams.get("code")
-  const nextParam = searchParams.get("next")
-  const next = nextParam?.startsWith("/") ? nextParam : "/dashboard"
-
-  if (code) {
-    const supabase = await createClient()
-
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-
-    if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
-    }
-
-    return NextResponse.redirect(
-      `${origin}/auth/error?error=${encodeURIComponent(error?.message ?? "Authentication failed")}`
-    )
-  }
-
-  return NextResponse.redirect(
-    `${origin}/auth/error?error=${encodeURIComponent("No authorization code provided")}`
-  )
+/**
+ * Compatibility bridge: if Supabase is still configured to redirect OAuth to
+ * /api/auth/callback, forward to the client-side callback page (query params
+ * preserved) where the PKCE code exchange can actually run in the browser.
+ */
+export async function GET(request: NextRequest) {
+  const url = request.nextUrl.clone();
+  url.pathname = "/auth/callback";
+  return NextResponse.redirect(url);
 }

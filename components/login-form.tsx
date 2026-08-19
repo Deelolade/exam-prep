@@ -51,9 +51,13 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
     setIsGoogleLoading(true)
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' })
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      })
       if (error) throw error
-      // On success Supabase redirects to the OAuth provider; nothing to do here.
+      // Supabase redirects to the OAuth provider; the callback page completes
+      // the exchange and routes to /dashboard.
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Google sign-in failed')
     } finally {
