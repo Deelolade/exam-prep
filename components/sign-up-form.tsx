@@ -90,7 +90,11 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          // Always show Google's account picker so users can switch accounts.
+          queryParams: { prompt: 'select_account' },
+        },
       })
       if (error) throw error
       // Supabase redirects to the OAuth provider; the callback page completes
