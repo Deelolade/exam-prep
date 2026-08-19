@@ -15,5 +15,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     redirect("/auth/login");
   }
 
-  return <AppShell userEmail={user.email ?? undefined}>{children}</AppShell>;
+  let displayName: string | undefined;
+  try {
+    const { data } = await supabase
+      .from("profiles")
+      .select("username, full_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    displayName = data?.full_name ?? data?.username ?? undefined;
+  } catch {
+    displayName = undefined;
+  }
+
+  return (
+    <AppShell userEmail={user.email ?? undefined} userName={displayName}>
+      {children}
+    </AppShell>
+  );
 }

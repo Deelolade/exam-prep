@@ -9,6 +9,7 @@ import {
   FiLogOut,
   FiSettings,
   FiTrendingUp,
+  FiUser,
   FiZap,
 } from "react-icons/fi";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ const NAV: NavItem[] = [
   { href: "/practice", label: "Practice", shortLabel: "Practice", icon: FiEdit3 },
   { href: "/progress", label: "Progress", shortLabel: "Progress", icon: FiTrendingUp },
   { href: "/insights", label: "AI Insights", shortLabel: "Insights", icon: FiZap },
+  { href: "/profile", label: "Profile", shortLabel: "Profile", icon: FiUser },
 ];
 
 const SETTINGS: BaseNavItem = { href: "/settings", label: "Settings", icon: FiSettings };
@@ -53,9 +55,17 @@ function NavLink({ item, active }: { item: BaseNavItem; active: boolean }) {
 }
 
 /** Desktop sidebar — fixed on the left (lg and up). */
-function DesktopSidebar({ pathname, userEmail }: { pathname: string; userEmail?: string }) {
+function DesktopSidebar({
+  pathname,
+  userEmail,
+  userName,
+}: {
+  pathname: string;
+  userEmail?: string;
+  userName?: string;
+}) {
   const router = useRouter();
-  const initials = (userEmail ?? "?")
+  const initials = (userName ?? userEmail ?? "?")
     .split("@")[0]
     .slice(0, 2)
     .toUpperCase();
@@ -89,11 +99,17 @@ function DesktopSidebar({ pathname, userEmail }: { pathname: string; userEmail?:
 
       <div className="border-t border-white/10 p-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/20 text-[13px] font-semibold text-primary">
+          <Link
+            href="/profile"
+            aria-label="Profile"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/20 text-[13px] font-semibold text-primary hover:bg-primary/30 transition"
+          >
             {initials}
-          </span>
+          </Link>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium text-white">{userEmail ?? "Account"}</p>
+            <p className="truncate text-[13px] font-medium text-white">
+              {userName ?? userEmail ?? "Account"}
+            </p>
             <p className="text-[11px] text-white/40">Signed in</p>
           </div>
           <button
@@ -141,9 +157,11 @@ function BottomNav({ pathname }: { pathname: string }) {
 
 export default function AppShell({
   userEmail,
+  userName,
   children,
 }: {
   userEmail?: string;
+  userName?: string;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -152,7 +170,7 @@ export default function AppShell({
     <div className="min-h-svh bg-surface">
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 bg-dark lg:block">
-        <DesktopSidebar pathname={pathname} userEmail={userEmail} />
+        <DesktopSidebar pathname={pathname} userEmail={userEmail} userName={userName} />
       </aside>
 
       {/* Mobile topbar */}

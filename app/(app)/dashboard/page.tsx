@@ -27,7 +27,19 @@ export default async function DashboardPage() {
   const [exams, stats] = await Promise.all([getUserExams(), getExamStats()]);
   const activeExam = exams[0];
 
-  const name = greetingName(user.email);
+  let profileName: string | undefined;
+  try {
+    const { data } = await supabase
+      .from("profiles")
+      .select("username, full_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    profileName = data?.full_name ?? data?.username ?? undefined;
+  } catch {
+    profileName = undefined;
+  }
+
+  const name = profileName ?? greetingName(user.email);
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
