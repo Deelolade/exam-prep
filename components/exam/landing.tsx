@@ -38,7 +38,7 @@ export default function Landing({ sections, questionCount, examName, onStart }: 
               />
               <span className="text-[13px] text-slate-500 leading-tight">
                 <b className="block text-[13.5px] font-semibold text-dark">{s.name}</b>
-                Section {s.code}
+                {s.count} questions
               </span>
               <span className="ml-auto font-mono text-xs text-primary">{s.count}Q</span>
             </div>

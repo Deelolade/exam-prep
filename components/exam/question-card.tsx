@@ -32,7 +32,7 @@ export default function QuestionCard({
           Q{index + 1} / {total}
         </span>
         <span className="font-mono text-[11px] tracking-[0.08em] uppercase" style={{ color: section?.color }}>
-          Section {section?.code} · {section?.name}
+          {section?.name}
         </span>
       </div>
 
