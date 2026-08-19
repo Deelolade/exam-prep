@@ -1,3 +1,4 @@
+import { APP_URL } from "@/utils/env";
 import {
   Body,
   Button,
@@ -24,7 +25,7 @@ export type WelcomeEmailProps = {
   appUrl?: string;
 };
 
-export default function WelcomeEmail({ appUrl = "http://localhost:3000" }: WelcomeEmailProps) {
+export default function WelcomeEmail({ appUrl = APP_URL }: WelcomeEmailProps) {
   return (
     <Html lang="en">
       <Head>
