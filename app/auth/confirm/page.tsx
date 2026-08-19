@@ -28,7 +28,7 @@ function ConfirmHandler() {
     const nextParam = searchParams.get('next')
     const next = nextParam?.startsWith('/') ? nextParam : '/'
 
-    const supabase = createClient()
+    const supabase = createClient({ auth: { detectSessionInUrl: false } });
 
     const fail = (message: string, code?: string) =>
       router.replace(

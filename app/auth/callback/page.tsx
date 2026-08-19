@@ -32,7 +32,10 @@ function OAuthCallbackHandler() {
         return;
       }
 
-      const supabase = createClient();
+      // Auto-detection is disabled so the URL's code is exchanged exactly once
+      // here — otherwise the client would consume the verifier on init and
+      // this explicit call would fail with a missing-verifier error.
+      const supabase = createClient({ auth: { detectSessionInUrl: false } });
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (error) {
