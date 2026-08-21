@@ -7,6 +7,42 @@ import type { Question, Section } from "@/data/questions";
 /** Fresh AI questions generated per subject when an exam's set is prepared. */
 export const QUESTIONS_PER_SUBJECT = 10;
 
+function customSubjectCode(name: string): string {
+  const slug =
+    name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 20) ||
+    "subject";
+  return `cs-${slug}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+/**
+ * Resolves subject names to their codes, auto-creating missing (custom)
+ * subjects in the subjects table so they can get AI-generated question banks.
+ * Unknown names that fail to create keep code: null.
+ */
+export async function resolveSubjectCodes(
+  names: string[],
+): Promise<{ code: string | null; name: string }[]> {
+  const admin = createAdminClient();
+
+  const { data: existing } = await admin
+    .from("subjects")
+    .select("code, name")
+    .in("name", names);
+
+  const byName = new Map<string, string>((existing ?? []).map((s) => [s.name, s.code]));
+
+  for (const name of [...new Set(names.filter((n) => !byName.has(n)))]) {
+    const { data, error } = await admin
+      .from("subjects")
+      .insert({ code: customSubjectCode(name), name, color: "#64748B", sort_order: 100 })
+      .select("code")
+      .maybeSingle();
+    if (!error && data) byName.set(name, data.code);
+  }
+
+  return names.map((name) => ({ code: byName.get(name) ?? null, name }));
+}
+
 // ---------- Exam content (subjects + questions) ----------
 
 type DbQuestionRow = {
@@ -271,10 +307,28 @@ async function generateForSubjects(
  * the exam has no subjects with a question bank.
  */
 export async function ensureExamQuestions(exam: StoredExam): Promise<Question[] | null> {
-  const coded = exam.subjects.filter((s) => s.code !== null && s.code !== undefined);
-  if (coded.length === 0) return null;
-
   const admin = createAdminClient();
+
+  // Resolve every subject to a code — custom subjects are auto-created in the
+  // subjects table — and persist any changes back to the exam so legacy exams
+  // (stored with code: null) pick up their codes too.
+  const resolved = await resolveSubjectCodes(exam.subjects.map((s) => s.name));
+  const coded = resolved.filter((s) => s.code !== null && s.code !== undefined);
+
+  const codesChanged =
+    resolved.length !== exam.subjects.length ||
+    resolved.some((s, i) => s.code !== exam.subjects[i]?.code);
+  if (codesChanged) {
+    const { error: updateError } = await admin
+      .from("exams")
+      .update({ subjects: resolved })
+      .eq("id", exam.id);
+    if (updateError) {
+      console.error("Failed to sync exam subjects:", updateError);
+    }
+  }
+
+  if (coded.length === 0) return null;
 
   const { data: subjectRows } = await admin
     .from("subjects")

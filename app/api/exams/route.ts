@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/server";
+import { resolveSubjectCodes } from "@/lib/exam-data";
 
 export async function GET() {
   const supabase = await createClient();
@@ -52,20 +53,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Pick at least one subject" }, { status: 400 });
   }
 
-  // Resolve known subject names to their codes so question banks can be
-  // mapped later; custom subjects keep code null.
-  const { data: knownSubjects } = await supabase
-    .from("subjects")
-    .select("code, name")
-    .in("name", subjectNames.filter((s): s is string => typeof s === "string"));
-
-  const known = new Map((knownSubjects ?? []).map((s) => [s.name, s.code]));
-  const subjects = subjectNames
-    .filter((s): s is string => typeof s === "string")
-    .map((subjectName) => ({
-      code: known.get(subjectName) ?? null,
-      name: subjectName,
-    }));
+  // Resolve known subject names to their codes and auto-create custom
+  // subjects so every selected subject can get an AI-generated question bank.
+  const subjects = await resolveSubjectCodes(
+    subjectNames.filter((s): s is string => typeof s === "string"),
+  );
 
   const dailyMinutesNumber =
     typeof dailyMinutes === "number" && Number.isFinite(dailyMinutes) ? dailyMinutes : null;

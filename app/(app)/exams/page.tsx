@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FiArrowRight, FiCalendar, FiPlus } from "react-icons/fi";
+import { FiArrowRight, FiCalendar, FiEdit2, FiPlus } from "react-icons/fi";
 
 import DeleteExamButton from "@/components/app/delete-exam-button";
 import { BTN_GOLD, BTN_OUTLINE, CARD } from "@/components/app/ui";
@@ -48,7 +48,17 @@ export default async function ExamsPage() {
                     <h2 className="text-lg font-semibold tracking-tight text-dark">{exam.name}</h2>
                     <p className="mt-0.5 text-[13px] text-slate-500">{subjectNames}</p>
                   </div>
-                  <DeleteExamButton examId={exam.id} examName={exam.name} />
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Link
+                      href={`/exams/${exam.id}/edit`}
+                      aria-label={`Edit ${exam.name}`}
+                      title="Edit exam"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                    >
+                      <FiEdit2 className="w-4 h-4" aria-hidden="true" />
+                    </Link>
+                    <DeleteExamButton examId={exam.id} examName={exam.name} />
+                  </div>
                 </div>
 
                 <p className="mt-4 flex items-center gap-1.5 text-[13px] text-slate-500">
