@@ -58,8 +58,13 @@ async function ExamContent({ exam }: { exam: StoredExam }) {
     );
   }
 
+  // Re-fetch the exam so custom subjects resolved during generation (codes
+  // persisted by ensureExamQuestions) are reflected in the section legend.
+  const freshExam = await getExamById(exam.id);
+  const effectiveExam = freshExam ?? exam;
+
   const codes = new Set(
-    exam.subjects.map((s) => s.code).filter((c): c is string => c !== null),
+    effectiveExam.subjects.map((s) => s.code).filter((c): c is string => c !== null),
   );
 
   const sections = (await getSubjectSections())
