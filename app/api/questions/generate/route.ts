@@ -22,7 +22,9 @@ export async function POST(request: Request) {
   const subjectCode: unknown = body?.subject_code;
   const countRaw: unknown = body?.count;
   const difficulty: unknown = body?.difficulty;
+  const level: unknown = body?.level ?? body?.exam_level;
   const examType: unknown = body?.exam_type;
+  const institution: unknown = body?.institution;
 
   if (typeof subjectCode !== "string" || subjectCode.trim().length === 0) {
     return NextResponse.json({ error: "subject_code is required" }, { status: 400 });
@@ -55,7 +57,9 @@ export async function POST(request: Request) {
       difficulty: DIFFICULTIES.includes(difficulty as (typeof DIFFICULTIES)[number])
         ? (difficulty as (typeof DIFFICULTIES)[number])
         : undefined,
+      level: typeof level === "string" ? level : undefined,
       examType: typeof examType === "string" ? examType : undefined,
+      institution: typeof institution === "string" ? institution : undefined,
     });
   } catch (err) {
     console.error("Question generation failed:", err);

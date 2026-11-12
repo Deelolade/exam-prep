@@ -283,6 +283,8 @@ async function generateSubjectQuestions(
   subject: StoredExamSubject,
   nameByCode: Map<string, string>,
   examName: string,
+  examLevel?: string | null,
+  institution?: string | null,
 ): Promise<Question[]> {
   const code = subject.code as string;
   const input = {
@@ -290,6 +292,8 @@ async function generateSubjectQuestions(
     subjectName: nameByCode.get(code) ?? subject.name,
     count: QUESTIONS_PER_SUBJECT,
     examType: examName,
+    level: examLevel ?? undefined,
+    institution: institution ?? undefined,
   };
 
   let lastError: unknown;
@@ -320,6 +324,8 @@ async function generateForSubjects(
   subjects: StoredExamSubject[],
   nameByCode: Map<string, string>,
   examName: string,
+  examLevel?: string | null,
+  institution?: string | null,
 ): Promise<Question[]> {
   const CONCURRENCY = 2;
   const generated: Question[] = [];
@@ -327,7 +333,9 @@ async function generateForSubjects(
   for (let i = 0; i < subjects.length; i += CONCURRENCY) {
     const batch = subjects.slice(i, i + CONCURRENCY);
     const results = await Promise.allSettled(
-      batch.map((subject) => generateSubjectQuestions(subject, nameByCode, examName)),
+      batch.map((subject) =>
+        generateSubjectQuestions(subject, nameByCode, examName, examLevel, institution),
+      ),
     );
 
     results.forEach((result, idx) => {
@@ -392,7 +400,13 @@ export async function ensureExamQuestions(exam: StoredExam): Promise<Question[] 
 
   if (missing.length === 0) return existing;
 
-  const generated = await generateForSubjects(missing, nameByCode, exam.name);
+  const generated = await generateForSubjects(
+    missing,
+    nameByCode,
+    exam.name,
+    exam.level,
+    exam.institution,
+  );
 
   let order = existing.length;
   const rows = generated.map((q) => ({
