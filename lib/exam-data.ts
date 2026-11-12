@@ -46,6 +46,7 @@ export async function resolveSubjectCodes(
 // ---------- Exam content (subjects + questions) ----------
 
 type DbQuestionRow = {
+  id: string;
   subject_code: string;
   question: string;
   passage: string | null;
@@ -182,6 +183,50 @@ export async function getExamStats(): Promise<ExamStats> {
   return { questionsBySubject, totalAnswered, overallCorrect, answersByDay };
 }
 
+/** One completed practice attempt — the user's score for a single run. */
+export type ScoreSession = {
+  id: string;
+  exam_id: string;
+  exam_name: string;
+  total_questions: number;
+  correct_answers: number;
+  score_percent: number;
+  completed_at: string;
+};
+
+/** Extracts the exam name from a Supabase-embedded `exams(name)` relation. */
+function embeddedExamName(value: unknown): string {
+  if (!value) return "Practice";
+  if (Array.isArray(value)) return value[0]?.name ?? "Practice";
+  return (value as { name?: string }).name ?? "Practice";
+}
+
+/**
+ * The user's completed practice attempts, most recent first. Safe to call
+ * when the practice_sessions table is missing (returns []).
+ */
+export async function getScoreHistory(): Promise<ScoreSession[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("practice_sessions")
+    .select("id, exam_id, exams(name), total_questions, correct_answers, score_percent, completed_at")
+    .order("completed_at", { ascending: false })
+    .limit(20);
+
+  if (error || !data) return [];
+
+  return data.map((row) => ({
+    id: row.id as string,
+    exam_id: row.exam_id as string,
+    exam_name: embeddedExamName(row.exams),
+    total_questions: row.total_questions as number,
+    correct_answers: row.correct_answers as number,
+    score_percent: row.score_percent as number,
+    completed_at: row.completed_at as string,
+  }));
+}
+
 /** All subjects, for building the section legend of an exam's practice set. */
 export async function getSubjectSections(): Promise<Section[]> {
   const supabase = await createClient();
@@ -207,7 +252,7 @@ export async function getExamQuestions(exam: StoredExam): Promise<Question[] | n
 
   const { data, error } = await supabase
     .from("questions")
-    .select("subject_code, question, passage, hint, options")
+    .select("id, subject_code, question, passage, hint, options")
     .eq("exam_id", exam.id)
     .order("sort_order")
     .order("created_at")
@@ -221,6 +266,7 @@ export async function getExamQuestions(exam: StoredExam): Promise<Question[] | n
     if (seen.has(row.question)) continue;
     seen.add(row.question);
     questions.push({
+      id: row.id,
       section: row.subject_code,
       q: row.question,
       hint: row.hint,

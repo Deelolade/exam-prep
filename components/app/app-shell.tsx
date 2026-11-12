@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/client";
 import type { IconType } from "react-icons";
+import BackButton from "./back-button";
 
 type BaseNavItem = { href: string; label: string; icon: IconType };
 
@@ -166,6 +167,14 @@ export default function AppShell({
 }) {
   const pathname = usePathname();
 
+  // Sub-pages are anything under /exams/ (new exam, practice, edit). The
+  // practice screen (/exams/[examId]) is full-screen, so its back control
+  // lives inside the practice landing instead of the content row.
+  const segments = pathname.split("/").filter(Boolean);
+  const isExamSubPage = segments[0] === "exams" && segments.length >= 2;
+  const isPracticePage = segments.length === 2 && segments[1] !== "new";
+  const examFallback = segments.length >= 3 ? `/exams/${segments[1]}` : "/exams";
+
   return (
     <div className="min-h-svh bg-surface">
       {/* Desktop sidebar */}
@@ -175,9 +184,20 @@ export default function AppShell({
 
       {/* Mobile topbar */}
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between bg-dark px-4 lg:hidden">
-        <span className="text-[16px] font-semibold tracking-tight text-white">
-          ExamPrep<span className="text-primary">.run</span>
-        </span>
+        <div className="flex min-w-0 items-center gap-0.5">
+          {isExamSubPage && (
+            <BackButton
+              fallbackHref={examFallback}
+              variant="dark"
+              iconOnly
+              aria-label="Back"
+              className="-ml-1.5"
+            />
+          )}
+          <span className="truncate text-[16px] font-semibold tracking-tight text-white">
+            ExamPrep<span className="text-primary">.run</span>
+          </span>
+        </div>
         <Link
           href="/settings"
           aria-label="Settings"
@@ -193,6 +213,9 @@ export default function AppShell({
       {/* Main content */}
       <main className="lg:pl-60">
         <div className="mx-auto max-w-5xl px-4 py-8 pb-28 sm:px-6 lg:px-10 lg:pb-10">
+          {isExamSubPage && !isPracticePage && (
+            <BackButton fallbackHref={examFallback} className="mb-6" />
+          )}
           {children}
         </div>
       </main>

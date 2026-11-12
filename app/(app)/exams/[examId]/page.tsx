@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { FiLoader } from "react-icons/fi";
+import { FiArrowLeft, FiLoader } from "react-icons/fi";
 
 import Exam from "@/components/exam/exam";
 import { BTN_OUTLINE, CARD } from "@/components/app/ui";
@@ -23,6 +23,13 @@ function GeneratingState({ examName }: { examName: string }) {
           Generating a fresh AI question set for {examName} — one batch per subject. This can take
           a minute on the first attempt.
         </p>
+        <Link
+          href="/exams"
+          className={`${BTN_OUTLINE} mt-6 w-full`}
+        >
+          <FiArrowLeft className="w-4 h-4" aria-hidden="true" />
+          Back to exams
+        </Link>
       </div>
     </div>
   );
@@ -74,7 +81,7 @@ async function ExamContent({ exam }: { exam: StoredExam }) {
       count: questions.filter((q) => q.section === s.code).length,
     }));
 
-  return <Exam sections={sections} questions={questions} examName={exam.name} />;
+  return <Exam sections={sections} questions={questions} examName={exam.name} examId={exam.id} />;
 }
 
 export default async function ExamPracticePage({

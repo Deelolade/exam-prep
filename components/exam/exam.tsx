@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Question, Section } from "@/data/questions";
 import Landing from "./landing";
@@ -13,14 +13,16 @@ type ExamProps = {
   sections: Section[];
   questions: Question[];
   examName?: string;
+  examId?: string;
 };
 
-export default function Exam({ sections, questions, examName }: ExamProps) {
+export default function Exam({ sections, questions, examName, examId }: ExamProps) {
   const total = questions.length;
   const [view, setView] = useState<View>("landing");
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(() => new Array(total).fill(null));
   const [flags, setFlags] = useState<boolean[]>(() => new Array(total).fill(false));
+  const savingRef = useRef(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -42,16 +44,58 @@ export default function Exam({ sections, questions, examName }: ExamProps) {
     setView("landing");
   };
 
+  /**
+   * Persists the completed attempt (answers + score) so it shows up in
+   * progress. Best-effort: results are shown either way.
+   */
+  const saveScore = useCallback(
+    async (correct: number) => {
+      if (!examId || savingRef.current) return;
+      savingRef.current = true;
+
+      const submitted: { question_id: string; selected_index: number }[] = [];
+      for (let i = 0; i < total; i++) {
+        const picked = answers[i];
+        const questionId = questions[i]?.id;
+        if (picked !== null && questionId) {
+          submitted.push({ question_id: questionId, selected_index: picked });
+        }
+      }
+
+      try {
+        if (submitted.length > 0) {
+          const response = await fetch("/api/practice/submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ exam_id: examId, answers: submitted }),
+          });
+          const result = await response.json().catch(() => null);
+
+          if (!response.ok) {
+            toast.error(result?.error ?? "Couldn't save your score");
+            return;
+          }
+        }
+        toast.success("Score saved", {
+          description: `You scored ${correct}/${total} (${Math.round((correct / total) * 100)}%).`,
+        });
+      } catch {
+        toast.error("Couldn't save your score");
+      } finally {
+        savingRef.current = false;
+      }
+    },
+    [examId, answers, questions, total],
+  );
+
   const finish = useCallback(() => {
     setView("results");
     const correct = answers.reduce<number>(
       (acc, a, i) => acc + (a !== null && questions[i].options[a].c ? 1 : 0),
       0,
     );
-    toast.success("Exam submitted", {
-      description: `You scored ${correct}/${total} (${Math.round((correct / total) * 100)}%).`,
-    });
-  }, [answers, questions, total]);
+    void saveScore(correct);
+  }, [answers, questions, saveScore]);
 
   const handleSubmit = () => {
     const unanswered = answers.filter((a) => a === null).length;

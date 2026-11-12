@@ -1,4 +1,5 @@
-import { FiArrowRight } from "react-icons/fi";
+import Link from "next/link";
+import { FiArrowLeft, FiArrowRight } from "react-icons/fi";
 import type { Section } from "@/data/questions";
 
 type LandingProps = {
@@ -10,8 +11,16 @@ type LandingProps = {
 
 export default function Landing({ sections, questionCount, examName, onStart }: LandingProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center px-5 py-8">
-      <div className="max-w-190 w-full">
+    <div className="min-h-screen flex flex-col justify-center px-5 py-8">
+      <div className="mx-auto w-full max-w-190">
+        <Link
+          href="/exams"
+          className="inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-slate-500 transition hover:text-slate-800 hover:bg-slate-100 mb-6 px-1 py-1"
+        >
+          <FiArrowLeft className="w-4 h-4" aria-hidden="true" />
+          Back to exams
+        </Link>
+
         <p className="font-mono text-xs tracking-[0.14em] uppercase text-primary mb-3.5">
           {examName ? `CBT Practice · ${examName}` : "CBT Screening Exam · Simulator"}
         </p>

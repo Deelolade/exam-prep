@@ -21,6 +21,8 @@ export type Option = {
 };
 
 export type Question = {
+  /** Supabase questions.id when the question comes from the DB. */
+  id?: string;
   section: string;
   q: string;
   hint: string;
