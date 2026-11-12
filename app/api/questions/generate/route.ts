@@ -26,8 +26,29 @@ export async function POST(request: Request) {
   const examType: unknown = body?.exam_type;
   const institution: unknown = body?.institution;
 
+  const examId: unknown = body?.exam_id;
+
   if (typeof subjectCode !== "string" || subjectCode.trim().length === 0) {
     return NextResponse.json({ error: "subject_code is required" }, { status: 400 });
+  }
+
+  if (typeof examId !== "string" || examId.trim().length === 0) {
+    return NextResponse.json(
+      { error: "exam_id is required to associate questions with your exam" },
+      { status: 400 },
+    );
+  }
+
+  // Ensure user owns the target exam before generating questions
+  const { data: exam, error: examError } = await supabase
+    .from("exams")
+    .select("id")
+    .eq("id", examId.trim())
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (examError || !exam) {
+    return NextResponse.json({ error: "Exam not found or unauthorized" }, { status: 404 });
   }
 
   const count =
@@ -69,10 +90,11 @@ export async function POST(request: Request) {
     );
   }
 
-  // Append after the highest sort_order for this subject.
+  // Append after the highest sort_order for this exam and subject.
   const { data: maxRow } = await admin
     .from("questions")
     .select("sort_order")
+    .eq("exam_id", exam.id)
     .eq("subject_code", subject.code)
     .order("sort_order", { ascending: false })
     .limit(1)
@@ -82,7 +104,7 @@ export async function POST(request: Request) {
 
   const { data: inserted, error: insertError } = await admin
     .from("questions")
-    .insert(
+    .upsert(
       questions.map((q, i) => ({
         subject_code: q.section,
         question: q.q,
@@ -92,7 +114,9 @@ export async function POST(request: Request) {
         source: "ai",
         model: getAiModel(),
         sort_order: baseOrder + i,
+        exam_id: exam.id,
       })),
+      { onConflict: "exam_id,question", ignoreDuplicates: true },
     )
     .select("id");
 

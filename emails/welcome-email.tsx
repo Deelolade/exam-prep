@@ -61,8 +61,8 @@ export default function WelcomeEmail({ appUrl = APP_URL }: WelcomeEmailProps) {
           </Heading>
 
           <Text style={{ fontSize: "15px", lineHeight: "1.6", color: MUTED, margin: "0 0 24px" }}>
-            Your account is ready. Practice realistic CBT questions for the OOU ND Computer
-            Engineering screening, track your performance, and understand every answer.
+            Your account is ready. Practice realistic CBT questions for university screenings,
+            JAMB/UTME, Post-UTME, WAEC, SAT, and major examinations across all institutions and subjects.
           </Text>
 
           <Section style={{ textAlign: "center", margin: "28px 0" }}>

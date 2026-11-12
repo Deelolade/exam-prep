@@ -13,6 +13,14 @@ import { createClient } from '@/lib/client'
  * error. The `createBrowserClient` from `@supabase/ssr` writes the session to
  * cookies, so middleware and server components pick it up afterwards.
  */
+function getSafeRedirect(target: string | null, fallback = "/"): string {
+  if (!target || typeof target !== "string") return fallback;
+  if (!target.startsWith("/") || target.startsWith("//") || target.startsWith("/\\") || target.includes("\\")) {
+    return fallback;
+  }
+  return target;
+}
+
 function ConfirmHandler() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -26,7 +34,7 @@ function ConfirmHandler() {
     const type = searchParams.get('type') as EmailOtpType | null
     const code = searchParams.get('code')
     const nextParam = searchParams.get('next')
-    const next = nextParam?.startsWith('/') ? nextParam : '/'
+    const next = getSafeRedirect(nextParam, '/')
 
     const supabase = createClient({ auth: { detectSessionInUrl: false } });
 

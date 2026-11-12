@@ -11,6 +11,14 @@ import { createClient } from "@/lib/client";
  * exchange would fail. The session is written to cookies by
  * @supabase/ssr's browser client, so the app picks it up afterwards.
  */
+function getSafeRedirect(target: string | null, fallback = "/dashboard"): string {
+  if (!target || typeof target !== "string") return fallback;
+  if (!target.startsWith("/") || target.startsWith("//") || target.startsWith("/\\") || target.includes("\\")) {
+    return fallback;
+  }
+  return target;
+}
+
 function OAuthCallbackHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -22,7 +30,7 @@ function OAuthCallbackHandler() {
 
     const code = searchParams.get("code");
     const nextParam = searchParams.get("next");
-    const next = nextParam?.startsWith("/") ? nextParam : "/dashboard";
+    const next = getSafeRedirect(nextParam, "/dashboard");
 
     const run = async () => {
       if (!code) {

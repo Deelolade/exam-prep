@@ -131,8 +131,19 @@ export async function getExamById(id: string): Promise<StoredExam | null> {
 export async function getExamStats(): Promise<ExamStats> {
   const supabase = await createClient();
 
+  // Scope questions to seed questions + user's own exams instead of scanning all users' questions
+  const { data: userExams } = await supabase.from("exams").select("id");
+  const examIds = (userExams ?? []).map((e) => e.id);
+
+  let questionsQuery = supabase.from("questions").select("id, subject_code");
+  if (examIds.length > 0) {
+    questionsQuery = questionsQuery.or(`exam_id.is.null,exam_id.in.(${examIds.join(",")})`);
+  } else {
+    questionsQuery = questionsQuery.is("exam_id", null);
+  }
+
   const [{ data: questions }, { data: answers }] = await Promise.all([
-    supabase.from("questions").select("id, subject_code"),
+    questionsQuery,
     supabase.from("practice_answers").select("question_id, is_correct, answered_at"),
   ]);
 

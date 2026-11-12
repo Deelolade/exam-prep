@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { FiMail } from "react-icons/fi";
 
 import { createClient } from "@/lib/server";
+import { getUserExams } from "@/lib/exam-data";
 import { LogoutButton } from "@/components/logout-button";
 import { CARD, SECTION_TITLE } from "@/components/app/ui";
 
@@ -16,6 +17,23 @@ export default async function SettingsPage() {
   if (error || !user) {
     redirect("/auth/login");
   }
+
+  const exams = await getUserExams();
+  const activeExam = exams[0];
+
+  const dailyMinutes = activeExam?.daily_minutes;
+  const dailyTimeLabel = dailyMinutes
+    ? dailyMinutes >= 60
+      ? `${dailyMinutes / 60} ${dailyMinutes === 60 ? "hour" : "hours"}`
+      : `${dailyMinutes} minutes`
+    : "30 minutes";
+
+  const levelLabel = activeExam?.level ?? "Intermediate";
+  const activeExamLabel = activeExam
+    ? activeExam.institution
+      ? `${activeExam.name} (${activeExam.institution})`
+      : activeExam.name
+    : "Universal CBT Practice";
 
   return (
     <div className="space-y-8">
@@ -46,10 +64,14 @@ export default async function SettingsPage() {
         <h2 className={SECTION_TITLE}>Study preferences</h2>
         <div className={`${CARD} mt-3 divide-y divide-slate-100`}>
           {[
-            { label: "Daily study time", value: "30 minutes" },
-            { label: "Study days", value: "Mon – Fri" },
-            { label: "Current level", value: "Intermediate" },
-            { label: "Active exam", value: "OOU PostUTME" },
+            { label: "Daily study time", value: dailyTimeLabel },
+            { label: "Study days", value: "Mon – Sun" },
+            { label: "Current level", value: levelLabel },
+            { label: "Active exam", value: activeExamLabel },
+            {
+              label: "Institution",
+              value: activeExam?.institution ?? "Universal (All institutions)",
+            },
           ].map((row) => (
             <div key={row.label} className="flex items-center justify-between px-5 py-4">
               <span className="text-sm text-slate-500">{row.label}</span>

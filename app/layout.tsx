@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: "CBT Screening Exam Simulator — OOU ND Computer Engineering",
+  title: "ExamPrep.run — Universal CBT & Screening Exam Simulator",
   description:
-    "50-question timed, section-balanced practice modelled on the OOU ND Computer Engineering CBT screening — pure sciences, mathematics, language, institutional knowledge, current affairs and technical background.",
+    "Timed, curriculum-aligned CBT practice for JAMB/UTME, University Post-UTME Screenings, WAEC, SAT, and tertiary admissions across all institutions and subjects.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

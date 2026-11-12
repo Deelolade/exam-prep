@@ -34,7 +34,7 @@ export const SECTIONS: Section[] = [
   { code: "A", name: "Pure Sciences", color: "#10B981", count: 8 },
   { code: "B", name: "Mathematics", color: "#F59E0B", count: 8 },
   { code: "C", name: "Language", color: "#2563EB", count: 8 },
-  { code: "D", name: "Institutional (OOU)", color: "#A855F7", count: 8 },
+  { code: "D", name: "General & Institutional Studies", color: "#A855F7", count: 8 },
   { code: "E", name: "Current Affairs", color: "#EF4444", count: 9 },
   { code: "F", name: "Technical Background", color: "#06B6D4", count: 9 },
 ];
@@ -354,117 +354,221 @@ export const QUESTIONS: Question[] = [
     ],
   },
 
-  // ---------------- SECTION D: INSTITUTIONAL — OOU (25-32) ----------------
+  // ---------------- SECTION D: GENERAL & INSTITUTIONAL STUDIES (25-32) ----------------
   {
     section: "D",
-    q: "What was Olabisi Onabanjo University originally called when it was founded?",
-    hint: "The university's present name came later.",
+    q: "Which regulatory body is statutory mandated to ensure quality assurance, accredit degree programmes, and set minimum benchmark academic standards for universities in Nigeria?",
+    hint: "It was established in 1962 following the recommendation of the Ashby Commission.",
     options: [
-      { t: "Ogun State University", c: true, r: "OOU was founded as Ogun State University in 1982." },
-      { t: "Ogun State Polytechnic", c: false, r: "This was not the university's original name." },
-      { t: "Ogun Federal University", c: false, r: "The institution was established by the Ogun State Government." },
-      { t: "Olabisi State University", c: false, r: "This was not its original name." },
-    ],
-  },
-  {
-    section: "D",
-    q: "In which year was Ogun State University renamed Olabisi Onabanjo University?",
-    hint: "It happened about 19 years after the university was founded.",
-    options: [
-      { t: "1982", c: false, r: "1982 was the year the university was founded." },
-      { t: "1991", c: false, r: "This was not the renaming year." },
       {
-        t: "2001",
+        t: "National Universities Commission (NUC)",
         c: true,
-        r: "The institution was renamed Olabisi Onabanjo University on May 29, 2001.",
+        r: "The NUC regulates university education, approves programmes, and coordinates development across all Nigerian universities.",
       },
-      { t: "2010", c: false, r: "The renaming had occurred years earlier." },
-    ],
-  },
-  {
-    section: "D",
-    q: "Where is OOU's Main Campus, commonly known as the Permanent Site, located?",
-    hint: "It is the university's principal campus.",
-    options: [
-      { t: "Ago-Iwoye", c: true, r: "OOU's Main/Permanent Site is in Ago-Iwoye, Ogun State." },
-      { t: "Sagamu", c: false, r: "Sagamu hosts the Obafemi Awolowo College of Health Sciences." },
-      { t: "Ibogun", c: false, r: "Ibogun is associated with engineering and environmental studies." },
-      { t: "Ayetoro", c: false, r: "Ayetoro is associated with agricultural sciences." },
-    ],
-  },
-  {
-    section: "D",
-    q: "Which OOU campus is associated with the College of Engineering and Environmental Studies?",
-    hint: "Think of the campus dedicated to technological and applied sciences.",
-    options: [
-      { t: "Sagamu", c: false, r: "Sagamu is primarily associated with health sciences." },
       {
-        t: "Ibogun",
-        c: true,
-        r: "OOU identifies Ibogun as the home of the College of Engineering and Environmental Studies.",
-      },
-      { t: "Ayetoro", c: false, r: "Ayetoro is associated with the College of Agricultural Sciences." },
-      { t: "Mini Campus", c: false, r: "The Mini Campus is associated with continuing education." },
-    ],
-  },
-  {
-    section: "D",
-    q: "Which OOU campus is home to the Obafemi Awolowo College of Health Sciences?",
-    hint: "Think of OOU's medical campus.",
-    options: [
-      { t: "Ibogun", c: false, r: "Ibogun hosts engineering and environmental studies." },
-      {
-        t: "Sagamu",
-        c: true,
-        r: "The Sagamu Campus hosts the Obafemi Awolowo College of Health Sciences.",
-      },
-      { t: "Ayetoro", c: false, r: "Ayetoro focuses on agricultural sciences." },
-      { t: "Mini Campus", c: false, r: "The Mini Campus focuses on continuing education and related programmes." },
-    ],
-  },
-  {
-    section: "D",
-    q: "Which college is principally associated with OOU's Ayetoro Campus?",
-    hint: "Ayetoro is situated in an important agricultural area of Ogun State.",
-    options: [
-      {
-        t: "College of Engineering and Environmental Studies",
+        t: "Joint Admissions and Matriculation Board (JAMB)",
         c: false,
-        r: "That college is associated with Ibogun.",
+        r: "JAMB conducts matriculation examinations and places candidates into tertiary institutions, but does not accredit programmes.",
       },
       {
-        t: "College of Agricultural Sciences",
-        c: true,
-        r: "Ayetoro is home to the College of Agricultural Sciences.",
+        t: "National Board for Technical Education (NBTE)",
+        c: false,
+        r: "NBTE regulates polytechnics, monotechnics, and technical colleges, not universities.",
       },
-      { t: "Obafemi Awolowo College of Health Sciences", c: false, r: "This is located at Sagamu." },
-      { t: "College of Law", c: false, r: "Law is not the defining college of the Ayetoro Campus." },
+      {
+        t: "Teachers Registration Council of Nigeria (TRCN)",
+        c: false,
+        r: "TRCN regulates the teaching profession, not university programme accreditation.",
+      },
     ],
   },
   {
     section: "D",
-    q: "According to OOU's official 2026 announcement, how many First Class graduates were listed for the 35th Convocation?",
-    hint: "The figure was reported in OOU's January 2026 convocation announcement.",
+    q: "In the governance structure of public universities, which individual or office serves as the ceremonial head and represents the ownership authority as Visitor?",
+    hint: "In Federal universities, it is the President; in State universities, it is the State Governor.",
     options: [
-      { t: "114", c: false, r: "114 was the First Class figure reported for the 34th Convocation in 2025." },
-      { t: "147", c: true, r: "OOU announced 147 First Class graduands for its 35th Convocation." },
-      { t: "200", c: false, r: "This was not the reported number." },
-      { t: "86", c: false, r: "86 was not the First Class figure." },
+      {
+        t: "The President or State Governor",
+        c: true,
+        r: "The Visitor is the titular head of a public university (the Head of State for Federal institutions or the Governor for State institutions).",
+      },
+      {
+        t: "The Vice-Chancellor",
+        c: false,
+        r: "The Vice-Chancellor is the chief academic and administrative officer, not the Visitor.",
+      },
+      {
+        t: "The Registrar",
+        c: false,
+        r: "The Registrar is the chief administrative officer and secretary to council and senate.",
+      },
+      {
+        t: "The Dean of Students",
+        c: false,
+        r: "The Dean of Students oversees student welfare, not university visitation.",
+      },
     ],
   },
   {
     section: "D",
-    q: "What recent OOU development was announced in May 2026 to support graduate employability?",
-    hint: "Think about skills and employability.",
+    q: "Which supreme internal statutory body is responsible for all academic affairs, curriculum development, examinations, and the award of degrees in a university?",
+    hint: "It is composed of professors, deans, and heads of academic departments.",
     options: [
-      { t: "50 compulsory postgraduate programmes", c: false, r: "This was not the announcement." },
       {
-        t: "50 free short courses",
+        t: "The University Senate",
         c: true,
-        r: "OOU announced the introduction of 50 free short courses aimed at boosting graduate employability.",
+        r: "The Senate holds supreme authority over all academic matters, degree awards, and curriculum regulations in a university.",
       },
-      { t: "50 new undergraduate faculties", c: false, r: "OOU did not announce 50 new faculties." },
-      { t: "50 new campuses", c: false, r: "The announcement concerned short courses, not campuses." },
+      {
+        t: "The Governing Council",
+        c: false,
+        r: "The Governing Council is the supreme policy-making and financial authority, but academic governance is vested in the Senate.",
+      },
+      {
+        t: "The Congregation",
+        c: false,
+        r: "Congregation brings together all degree-holding staff for general consultative meetings.",
+      },
+      {
+        t: "The Board of Trustees",
+        c: false,
+        r: "Board of Trustees holds custodial title, usually in private universities, but does not administer academic curricula.",
+      },
+    ],
+  },
+  {
+    section: "D",
+    q: "Which regulatory commission is responsible for accrediting academic curricula and standards in polytechnics and technical colleges across Nigeria?",
+    hint: "Look for the board focused on technical and vocational education.",
+    options: [
+      {
+        t: "National Board for Technical Education (NBTE)",
+        c: true,
+        r: "NBTE supervises, regulates, and accredits National Diploma (ND) and Higher National Diploma (HND) programmes.",
+      },
+      {
+        t: "National Universities Commission (NUC)",
+        c: false,
+        r: "NUC oversees degree programmes in universities.",
+      },
+      {
+        t: "National Commission for Colleges of Education (NCCE)",
+        c: false,
+        r: "NCCE oversees teacher education in Colleges of Education.",
+      },
+      {
+        t: "Industrial Training Fund (ITF)",
+        c: false,
+        r: "ITF oversees the Students Industrial Work Experience Scheme (SIWES), but is not the institutional accreditation board.",
+      },
+    ],
+  },
+  {
+    section: "D",
+    q: "What is the primary statutory purpose of the Tertiary Education Trust Fund (TETFund) in Nigeria?",
+    hint: "It is funded by an education tax imposed on registered companies in Nigeria.",
+    options: [
+      {
+        t: "Providing funding for infrastructure, academic staff development, and research in public tertiary institutions",
+        c: true,
+        r: "TETFund was established to disburse education tax funds specifically for physical infrastructure, research grants, and staff development in public tertiary institutions.",
+      },
+      {
+        t: "Conducting nationwide tertiary admissions examinations",
+        c: false,
+        r: "Admissions examinations are conducted by JAMB, not TETFund.",
+      },
+      {
+        t: "Setting the national minimum wage for university lecturers",
+        c: false,
+        r: "TETFund is an interventionist funding agency, not an industrial relations or wage-setting commission.",
+      },
+      {
+        t: "Issuing licenses to establish private universities",
+        c: false,
+        r: "Private university licensing is processed through the NUC and Federal Executive Council.",
+      },
+    ],
+  },
+  {
+    section: "D",
+    q: "In which year was the Joint Admissions and Matriculation Board (JAMB) formally established by federal decree to centralize tertiary admissions in Nigeria?",
+    hint: "It was established in the late 1970s under the military administration.",
+    options: [
+      {
+        t: "1978",
+        c: true,
+        r: "JAMB was established by Decree No. 2 of 1978 (subsequently amended by Decree No. 33 of 1989) to coordinate admissions into all universities.",
+      },
+      {
+        t: "1960",
+        c: false,
+        r: "Universities conducted independent entrance examinations in 1960.",
+      },
+      {
+        t: "1999",
+        c: false,
+        r: "JAMB had already been conducting the UTME for more than two decades before 1999.",
+      },
+      {
+        t: "1988",
+        c: false,
+        r: "1978 is the correct founding year; the 1989 decree extended JAMB's mandate to polytechnics and colleges of education.",
+      },
+    ],
+  },
+  {
+    section: "D",
+    q: "Who is the principal officer legally designated as the chief executive, academic leader, and day-to-day accounting officer of a university?",
+    hint: "This officer presides over the Senate and oversees overall institutional administration.",
+    options: [
+      {
+        t: "The Vice-Chancellor",
+        c: true,
+        r: "The Vice-Chancellor is the executive head and chief academic and administrative officer of the university.",
+      },
+      {
+        t: "The Chancellor",
+        c: false,
+        r: "The Chancellor is the titular head who confers degrees during convocation ceremonies, but does not manage daily affairs.",
+      },
+      {
+        t: "The Pro-Chancellor",
+        c: false,
+        r: "The Pro-Chancellor is the Chairman of the Governing Council, focusing on policy and council oversight.",
+      },
+      {
+        t: "The University Bursar",
+        c: false,
+        r: "The Bursar manages financial accounts, reporting to the Vice-Chancellor.",
+      },
+    ],
+  },
+  {
+    section: "D",
+    q: "What does the traditional academic phrase 'Alma Mater' signify in higher education parlance?",
+    hint: "It derives from Latin meaning 'nourishing mother'.",
+    options: [
+      {
+        t: "The school, college, or university from which an individual has graduated",
+        c: true,
+        r: "Alma Mater is used by graduates and scholars to refer affectionately to their former school or university.",
+      },
+      {
+        t: "The national anthem of a university's host country",
+        c: false,
+        r: "It refers to the institution itself, not an anthem.",
+      },
+      {
+        t: "The highest academic honour awarded to an undergraduate student",
+        c: false,
+        r: "Highest honors are termed First Class or Summa Cum Laude.",
+      },
+      {
+        t: "The ceremonial mace carried before the Chancellor",
+        c: false,
+        r: "The mace is the symbol of authority, not the Alma Mater.",
+      },
     ],
   },
 

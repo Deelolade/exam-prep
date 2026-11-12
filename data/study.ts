@@ -16,12 +16,17 @@ export const POPULAR_EXAMS = [
 ];
 
 export const SUBJECT_OPTIONS = [
+  "English",
   "Mathematics",
   "Physics",
   "Chemistry",
-  "Computer Engineering",
   "Biology",
-  "English",
+  "Economics",
+  "Government",
+  "Literature in English",
+  "Computer Science",
+  "Computer Engineering",
+  "Commerce",
   "Current Affairs",
 ];
 
@@ -32,11 +37,11 @@ export const STUDY_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export const LEVELS = ["Beginner", "Intermediate", "Advanced"];
 
 export const RECOMMENDED_FOCUS = [
-  { subject: "Mathematics", pct: 30 },
-  { subject: "Physics", pct: 25 },
-  { subject: "Computer Engineering", pct: 25 },
-  { subject: "English", pct: 10 },
-  { subject: "Current Affairs", pct: 10 },
+  { subject: "English", pct: 25 },
+  { subject: "Mathematics", pct: 25 },
+  { subject: "Physics", pct: 20 },
+  { subject: "Chemistry", pct: 15 },
+  { subject: "Current Affairs", pct: 15 },
 ];
 
 export function daysUntil(dateIso: string): number {
